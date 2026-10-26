@@ -8,6 +8,8 @@ solo cuando algo nos afecta o cambia.
 Solo usa la librería estándar de Python 3.11+.
 Variables de entorno:
   TELEGRAM_TOKEN, TELEGRAM_CHAT_ID  -> para los avisos (opcionales: sin ellas solo se imprime el aviso)
+  TEAMS_WEBHOOK                     -> URL de un flujo de Workflows de Teams ("Publicar en un canal cuando
+                                       se reciba una solicitud de webhook"); opcional, avisa también en Teams
   PANEL_URL                         -> enlace al panel en los avisos (opcional; se deduce en GitHub)
   VIGIA_PRUEBA=true                 -> manda un mensaje de prueba a Telegram y sigue normal
 """
@@ -399,6 +401,55 @@ def telegram(texto):
     return False
 
 
+# ---------------------------------------------------------------- Microsoft Teams
+COLOR_TEAMS = {"problema": "Attention", "sin_dato": "Warning", "mant": "Accent",
+               "recuperacion": "Good", "vuelve": "Good", "prueba": "Accent"}
+
+
+def teams(texto, tipo=None):
+    url = os.environ.get("TEAMS_WEBHOOK", "").strip()
+    if not url:
+        return False
+    if os.environ.get("VIGIA_SIMULAR_TELEGRAM"):  # solo para pruebas
+        return True
+    if not url.startswith("https://"):
+        print("[aviso] TEAMS_WEBHOOK no es una URL https: no se envió a Teams.", file=sys.stderr)
+        return False
+    lineas = texto.split("\n")
+    cuerpo = [{"type": "TextBlock", "text": lineas[0], "weight": "Bolder", "size": "Medium", "wrap": True,
+               "color": COLOR_TEAMS.get(tipo, "Default")}]
+    for l in lineas[1:]:
+        if not l.strip() or l.startswith("Panel: "):
+            continue
+        cuerpo.append({"type": "TextBlock", "text": l.strip(), "wrap": True, "spacing": "Small",
+                       "isSubtle": l.startswith("Revisado") or l.startswith("  http")})
+    tarjeta = {"type": "AdaptiveCard", "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+               "version": "1.4", "msteams": {"width": "Full"}, "body": cuerpo}
+    panel = url_panel()
+    if panel:
+        tarjeta["actions"] = [{"type": "Action.OpenUrl", "title": "Abrir panel", "url": panel}]
+    datos = json.dumps({"type": "message", "attachments": [
+        {"contentType": "application/vnd.microsoft.card.adaptive", "contentUrl": None, "content": tarjeta}]}).encode()
+    for intento in range(2):
+        try:
+            req = urllib.request.Request(url, data=datos, headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(req, timeout=20) as r:
+                if 200 <= r.status < 300:
+                    return True
+        except Exception as e:  # noqa: BLE001  (no se imprime la URL: es secreta)
+            print(f"[error] Teams falló (intento {intento + 1}): {type(e).__name__} {getattr(e, 'code', '')}",
+                  file=sys.stderr)
+            time.sleep(3)
+    return False
+
+
+def avisar(texto, tipo=None):
+    """Manda el aviso por Telegram y, si está configurado, por Teams. True si llegó por alguno."""
+    ok_tg = telegram(texto)
+    ok_teams = teams(texto, tipo)
+    return ok_tg or ok_teams
+
+
 def url_panel():
     if os.environ.get("PANEL_URL"):
         return os.environ["PANEL_URL"]
@@ -457,9 +508,9 @@ def main():
         prev = {}
 
     if os.environ.get("VIGIA_PRUEBA", "").lower() in ("1", "true", "si", "sí", "yes"):
-        telegram("🧪 PRUEBA del vigía de continuidad: si ves esto, los avisos por Telegram funcionan.\n"
+        avisar("🧪 PRUEBA del vigía de continuidad: si ves esto, los avisos funcionan.\n"
                  "A continuación, un EJEMPLO de cómo se ve un aviso de caída (datos inventados, no es real)."
-                 + (f"\nPanel: {url_panel()}" if url_panel() else ""))
+                 + (f"\nPanel: {url_panel()}" if url_panel() else ""), "prueba")
         ej_srv = servicio("gc-sae1", "Genesys Cloud", "Genesys Cloud · Americas (São Paulo)", "sae1", "degradado",
                           "Inbound Calls: Partial Outage", ["Inbound Calls"], GC_URL)
         ejemplo = {"nivel": "degradado", "titular": "Degradación de Inbound Calls en sae1",
@@ -469,8 +520,8 @@ def main():
                                    "fuente": "Genesys Cloud", "region": "sae1", "estado": "Investigando",
                                    "desde": iso(now - timedelta(minutes=12)), "act": iso(now), "url": GC_URL}],
                    "revisado": iso(now)}
-        telegram("🧪 EJEMPLO (no es real)\n" + armar_mensaje("problema", ejemplo,
-                                                            {clave(ejemplo["incidentes"][0])}))
+        avisar("🧪 EJEMPLO (no es real)\n" + armar_mensaje("problema", ejemplo,
+                                                          {clave(ejemplo["incidentes"][0])}), "problema")
 
     gc, gc_inc, gc_otros, gc_ok = revisar_genesys(bajar(GC_API), now)
     aws, aws_inc, aws_otros = revisar_aws(bajar(AWS_RSS), now)
@@ -550,7 +601,7 @@ def main():
 
     avisado = False
     if tipo:
-        avisado = telegram(armar_mensaje(tipo, estado, nuevos))
+        avisado = avisar(armar_mensaje(tipo, estado, nuevos), tipo)
         if avisado:
             estado["ultimo_aviso"] = iso(now)
 

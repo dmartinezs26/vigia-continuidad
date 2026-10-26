@@ -34,6 +34,7 @@ jobs:
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TEAMS_WEBHOOK: ${{ secrets.TEAMS_WEBHOOK }}
           PANEL_URL: ${{ vars.PANEL_URL }}
           VIGIA_PRUEBA: ${{ inputs.prueba }}
         run: python3 vigia.py
