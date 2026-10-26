@@ -260,7 +260,7 @@ html.M .kv dd{margin:0;color:var(--muted)}
 html.M .foot{font-size:12px;color:var(--muted);text-align:center;padding:4px 8px}
 html.M .foot a{color:var(--muted)}
 html.M .tabs{position:fixed;left:0;right:0;bottom:0;z-index:10;padding:0 max(12px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));pointer-events:none}
-html.M .tabs nav{pointer-events:auto;max-width:456px;margin:0 auto;background:var(--dark);border-radius:28px;display:grid;grid-template-columns:repeat(5,1fr);padding:8px}
+html.M .tabs nav{pointer-events:auto;max-width:456px;margin:0 auto;background:var(--dark);border-radius:28px;display:grid;grid-template-columns:repeat(6,1fr);padding:8px 6px}
 html.M .tab{border:0;background:transparent;color:var(--dark-ink);display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 4px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer}
 html.M .tab svg{width:21px;height:21px}
 html.M .tab[aria-current="page"]{background:var(--lav);color:var(--ink)}
@@ -323,6 +323,29 @@ html body .es-banner{display:flex;align-items:center;gap:12px;width:100%;border:
 .es-note{font-size:12px;color:var(--muted);max-width:70ch}
 .mode-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:12px;font-weight:700;padding:6px 12px;border-radius:999px;cursor:pointer}
 
+
+/* ===== Tema oscuro (clase .dark en <html>) ===== */
+html.dark,html.dark.M,html.dark.W{color-scheme:dark;
+  --canvas:#0E0E13; --frame:#16161D; --card:#1F1E28; --ink:#ECEBF2; --muted:#A4A2B3; --line:#2C2B37; --soft:#26252F;
+  --rail:#07070A; --rail-ink:#9E9CAE; --dark:#07070A; --dark-2:#2B2A35; --dark-ink:#9E9CAE;
+  --lav:#3B3473; --lav-2:#7465DA; --lav-ink:#BCB2FF; --pink:#7E4064; --pink-2:#A0517E;
+  --red:#FF7378; --red-bg:#3D1C20; --amber:#F2B35E; --amber-bg:#3A2A13; --green:#62D49C; --green-bg:#133127; --blue:#93A6FF; --blue-bg:#1D2448; --es-grey-bg:#272631}
+html.dark .es-caida{--es-bg:#B3262C;--es-ink:#fff}
+html.dark .th-red{background:linear-gradient(135deg,#4B232A,#40233A)}
+html.dark .th-amber{background:linear-gradient(135deg,#45331B,#3E2635)}
+html.dark .th-lav{background:linear-gradient(135deg,#2F2A57,#35294C)}
+html.dark .th-blue{background:linear-gradient(135deg,#24315B,#2D2A52)}
+html.dark .th-green{background:linear-gradient(135deg,#193B2D,#1F2E47)}
+html.dark .th-grey{background:linear-gradient(135deg,#27262F,#201F28)}
+html.dark .hero-band{opacity:.75}
+html.dark.M .bw{background:#ECEBF2;color:#16151C}
+html.dark.M .sheet .bw{background:var(--soft);color:var(--ink)}
+html.dark .btn-ghost{background:var(--soft)}
+html.dark .stat:hover,html.dark .tile:hover{box-shadow:0 12px 28px rgba(0,0,0,.45)}
+html.dark .rail{box-shadow:inset 0 0 0 1px #24232D}
+html.dark.M .tabs nav{box-shadow:inset 0 0 0 1px #24232D}
+html.dark.M .today{box-shadow:inset 0 0 0 1px #2C2B37}
+html,body{transition:background-color .2s ease}
 </style>
 
 <div id="W-root">
@@ -530,11 +553,27 @@ function estSubscribe(fn){EST_SUBS.push(fn)}
 /* ===== Modo: PC o celular según el ancho, con opción de forzarlo ===== */
 var MQ=window.matchMedia('(max-width:760px)');
 function autoMode(){return MQ.matches?'M':'W'}
-function prefMode(){try{return localStorage.getItem('cg-modo')}catch(e){return null}}
-function applyMode(){var m=prefMode()||autoMode();var r=document.documentElement;r.classList.toggle('W',m==='W');r.classList.toggle('M',m==='M');
+try{localStorage.removeItem('cg-modo')}catch(e){}
+function applyMode(){var m=autoMode();var r=document.documentElement;r.classList.toggle('W',m==='W');r.classList.toggle('M',m==='M');
   document.getElementById('W-root').hidden=m!=='W';document.getElementById('M-root').hidden=m!=='M'}
-function setMode(m){try{if(m===autoMode())localStorage.removeItem('cg-modo');else localStorage.setItem('cg-modo',m)}catch(e){}applyMode();window.scrollTo(0,0)}
 applyMode();
+/* ===== Tema claro / oscuro: sigue al sistema hasta que la persona elige ===== */
+var MQD=window.matchMedia('(prefers-color-scheme: dark)');var THEME_SUBS=[];
+function prefTheme(){try{return localStorage.getItem('cg-tema')}catch(e){return null}}
+function isDark(){var p=prefTheme();return p?p==='dark':MQD.matches}
+function applyTheme(){var d=isDark();document.documentElement.classList.toggle('dark',d);THEME_SUBS.forEach(function(f){f(d)})}
+function toggleTheme(){var d=!isDark();try{localStorage.setItem('cg-tema',d?'dark':'light')}catch(e){}applyTheme()}
+var SUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+var MOON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>';
+function themeButton(cls,withLabel,tipCls){
+  var b=document.createElement('button');b.type='button';b.className=cls;
+  function paint(d){var lbl=d?'Modo claro':'Modo oscuro';b.innerHTML=d?SUN:MOON;b.setAttribute('aria-label',lbl);
+    if(withLabel){var s=document.createElement('span');s.textContent=d?'Claro':'Oscuro';b.appendChild(s)}
+    if(tipCls){var t=document.createElement('span');t.className=tipCls;t.textContent=lbl;b.appendChild(t)}}
+  b.addEventListener('click',toggleTheme);THEME_SUBS.push(paint);paint(isDark());return b;
+}
+applyTheme();
+try{MQD.addEventListener('change',function(){if(!prefTheme())applyTheme()})}catch(e){try{MQD.addListener(function(){if(!prefTheme())applyTheme()})}catch(e2){}}
 try{MQ.addEventListener('change',applyMode)}catch(e){try{MQ.addListener(applyMode)}catch(e2){}}
 
 var WEBV=(function(){
@@ -620,7 +659,7 @@ var rail=document.getElementById('rail');
 VIEWS.forEach(function(v){var b=el('button','nav-b');b.type='button';b.dataset.v=v.id;b.setAttribute('aria-label',v.n);b.innerHTML=svg(v.i);b.appendChild(el('span','tip',v.n));
   b.addEventListener('click',function(){go(v.id)});rail.appendChild(b)});
 rail.appendChild(el('div','sp'));
-var mv=el('button','nav-b');mv.type='button';mv.setAttribute('aria-label','Ver como celular');mv.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/></svg>';mv.appendChild(el('span','tip','Ver como celular'));mv.addEventListener('click',function(){setMode('M')});rail.appendChild(mv);
+rail.appendChild(themeButton('nav-b',false,'tip'));
 var st=el('a','nav-b');st.href='https://status.mypurecloud.com';st.target='_blank';st.rel='noopener';st.setAttribute('aria-label','Estado del servicio');st.innerHTML=svg('pulse');st.appendChild(el('span','tip','Estado del servicio ↗'));rail.appendChild(st);
 
 function go(v){S.view=v;S.aud='all';render();try{history.replaceState(null,'','#'+v)}catch(e){}window.scrollTo(0,0)}
@@ -914,6 +953,7 @@ var M={tab:'hoy',seg:'dep'};
 var TABS=[{id:'estado',n:'Estado',i:'shield'},{id:'hoy',n:'Hoy',i:'home'},{id:'cambios',n:'Cambios',i:'list'},{id:'agenda',n:'Agenda',i:'cal'},{id:'avisar',n:'Avisar',i:'mega'}];
 var tabs=document.getElementById('tabs');
 TABS.forEach(function(t){var b=el('button','tab');b.type='button';b.dataset.t=t.id;b.innerHTML=svg(t.i);b.appendChild(el('span',null,t.n));b.addEventListener('click',function(){go(t.id)});tabs.appendChild(b)});
+tabs.appendChild(themeButton('tab',true,null));
 function go(t,seg){M.tab=t;if(seg)M.seg=seg;render();window.scrollTo(0,0)}
 
 function item(i,showDays){
@@ -1016,7 +1056,7 @@ function render(){
   Array.prototype.forEach.call(tabs.children,function(b){if(b.dataset.t===M.tab)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
   var v=M.tab==='estado'?sEstado():M.tab==='cambios'?sCambios():M.tab==='agenda'?sAgenda():M.tab==='avisar'?sAvisar():sHoy();
   app.textContent='';if(M.tab!=='estado')app.appendChild(estBanner(function(){go('estado')}));app.appendChild(v);
-  var f=el('p','foot');f.appendChild(document.createTextNode('Revisado el '+fdl(REVISADO)+' · '));var a=el('button','mode-btn','Ver versión PC');a.type='button';a.addEventListener('click',function(){setMode('W')});f.appendChild(a);app.appendChild(f);
+  var f=el('p','foot','Revisado el '+fdl(REVISADO));app.appendChild(f);
 }
 
 /* ----- Hoja, aviso y resumen ----- */
