@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Vigía de Continuidad</title>
+<meta name="description" content="Estado en vivo de Genesys Cloud, AWS y Microsoft para use1 y sae1.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='12' fill='%231E8A5A'/%3E%3C/svg%3E" id="fav">
+<style>
+:root{
+  --canvas:#EEEDF3; --card:#FFFFFF; --ink:#16151C; --muted:#6C6A78; --line:#E6E4EE; --soft:#F5F4F8;
+  --red:#D93A3F; --red-bg:#FDEBEC; --amber:#B4620E; --amber-bg:#FFF1DF; --green:#1E8A5A; --green-bg:#E3F5EC;
+  --blue:#3E57C9; --blue-bg:#E8ECFC; --grey-bg:#ECEBF1; --accent:#4B3FB8;
+  --font:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --canvas:#0F0F14; --card:#1A1A22; --ink:#EDECF3; --muted:#A09EAE; --line:#2A2933; --soft:#22212B;
+  --red:#FF6B6F; --red-bg:#3A1A1C; --amber:#F2A54A; --amber-bg:#3A2A16; --green:#4CCB8E; --green-bg:#173126;
+  --blue:#8CA0FF; --blue-bg:#1E2445; --grey-bg:#26252F; --accent:#B4A9FF;}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45}
+h1,h2,h3,p{margin:0}
+a{color:var(--accent)}
+.wrap{max-width:1100px;margin:0 auto;padding:20px max(16px,env(safe-area-inset-left)) 40px;display:flex;flex-direction:column;gap:18px}
+.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px}
+.top h1{font-size:22px;font-weight:800;letter-spacing:-.4px}
+.top p{font-size:13px;color:var(--muted)}
+.btn{border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:13px;font-weight:700;padding:7px 14px;border-radius:999px;cursor:pointer}
+.ok{--bg:var(--green-bg);--fg:var(--green)} .mant{--bg:var(--blue-bg);--fg:var(--blue)}
+.aviso,.degradado{--bg:var(--amber-bg);--fg:var(--amber)} .caida{--bg:var(--red);--fg:#fff}
+.sin_dato,.viejo{--bg:var(--grey-bg);--fg:var(--muted)}
+.hero{background:var(--bg);color:var(--fg);border-radius:24px;padding:22px;display:flex;flex-direction:column;gap:8px}
+.hero .k{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase}
+.hero .dot{width:12px;height:12px;border-radius:50%;background:currentColor;box-shadow:0 0 0 4px color-mix(in srgb,currentColor 20%,transparent)}
+@media (prefers-reduced-motion:no-preference){.caida .dot,.degradado .dot{animation:p 1.4s ease-in-out infinite}@keyframes p{50%{box-shadow:0 0 0 10px transparent}}}
+.hero h2{font-size:clamp(24px,5vw,34px);font-weight:800;letter-spacing:-.8px;line-height:1.1;text-wrap:balance}
+.hero p{font-size:14px;max-width:75ch;opacity:.92}
+.hero .meta{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12px;font-weight:700;opacity:.9}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.card{background:var(--card);border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.card h3{font-size:15px;font-weight:800;display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:4px}
+.card h3 small{font-size:12px;color:var(--muted);font-weight:600}
+.svc{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:10px 0;border-top:1px solid var(--line)}
+.svc:first-of-type{border-top:0}
+.svc b{font-size:14px}
+.svc .x{grid-column:1/-1;font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.chip{display:inline-block;font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;white-space:nowrap;align-self:start;background:var(--bg);color:var(--fg)}
+.inc{display:flex;flex-direction:column;gap:2px;padding:10px 0;border-top:1px solid var(--line)}
+.inc:first-of-type{border-top:0}
+.inc b{font-size:14px}
+.inc span{font-size:12px;color:var(--muted)}
+.empty{font-size:13px;color:var(--muted);padding:6px 0}
+.hist{display:flex;gap:1px;align-items:stretch;height:34px;margin-top:6px}
+.hist i{flex:1;min-width:1px;border-radius:2px;background:var(--fg);opacity:.9}
+.hist i.ok{opacity:.35} .hist i.caida{background:var(--red)}
+.hist-l{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px;font-variant-numeric:tabular-nums}
+.links{display:flex;flex-wrap:wrap;gap:8px}
+.links a{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:8px 13px;font-size:13px;font-weight:700;text-decoration:none;color:var(--ink)}
+.foot{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div><h1>Vigía de Continuidad</h1><p>Genesys Cloud, AWS y Microsoft · regiones use1 y sae1</p></div>
+    <button class="btn" id="recargar" type="button">Actualizar</button>
+  </header>
+  <section class="hero sin_dato" id="hero" aria-live="polite">
+    <div class="k"><span class="dot"></span><span id="h-k">Cargando…</span></div>
+    <h2 id="h-t">Leyendo el último estado</h2>
+    <p id="h-d"></p>
+    <div class="meta" id="h-m"></div>
+  </section>
+  <div class="grid" id="regiones"></div>
+  <div class="grid">
+    <section class="card"><h3>Incidentes que nos afectan <small id="n-inc"></small></h3><div id="inc"></div></section>
+    <section class="card"><h3>Otras regiones <small>solo informativo</small></h3><div id="otros"></div></section>
+  </div>
+  <section class="card"><h3>Últimas 24 horas <small id="h-res"></small></h3><div class="hist" id="hist"></div><div class="hist-l"><span id="h-ini"></span><span>ahora</span></div></section>
+  <nav class="links" aria-label="Páginas oficiales">
+    <a href="https://status.mypurecloud.com/" target="_blank" rel="noopener">Genesys Cloud ↗</a>
+    <a href="https://health.aws.amazon.com/health/status" target="_blank" rel="noopener">AWS Health ↗</a>
+    <a href="https://azure.status.microsoft/" target="_blank" rel="noopener">Azure ↗</a>
+    <a href="https://status.cloud.microsoft/" target="_blank" rel="noopener">Microsoft 365 ↗</a>
+  </nav>
+  <p class="foot">Se revisa cada 5 minutos con GitHub Actions y esta página se refresca sola cada minuto. Fuentes: páginas de estado públicas de cada proveedor.</p>
+</div>
+<script>
+(function(){
+var TXT={ok:'Operativo',mant:'Mantención',aviso:'Aviso',degradado:'Degradado',caida:'Caída',sin_dato:'Sin datos',viejo:'Sin actualizar'};
+var COLOR={ok:'#1E8A5A',mant:'#3E57C9',aviso:'#B4620E',degradado:'#B4620E',caida:'#D93A3F',sin_dato:'#8A8896',viejo:'#8A8896'};
+var VIEJO_MIN=20;
+var REG={use1:'Americas (US East) · N. Virginia',sae1:'Americas (São Paulo)',global:'Global'};
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function hora(iso){if(!iso)return '';var d=new Date(iso);if(isNaN(d))return '';
+  return d.toLocaleString('es-CL',{timeZone:'America/Santiago',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}
+function hace(iso){var m=Math.round((Date.now()-new Date(iso))/60000);if(isNaN(m))return '';if(m<1)return 'hace instantes';if(m<60)return 'hace '+m+' min';var h=Math.floor(m/60);return 'hace '+h+' h '+(m%60)+' min'}
+function chip(e){return '<span class="chip '+esc(e)+'">'+esc(TXT[e]||e)+'</span>'}
+function incHtml(i){
+  var b=[esc(i.fuente),esc(i.region),esc(i.estado)];
+  if(i.desde)b.push('desde '+esc(hora(i.desde)));
+  if(i.act)b.push('act. '+esc(hora(i.act)));
+  return '<div class="inc"><b>'+(i.url?'<a href="'+esc(i.url)+'" target="_blank" rel="noopener">'+esc(i.t)+'</a>':esc(i.t))+'</b><span>'+b.filter(Boolean).join(' · ')+'</span></div>'}
+function pintar(d){
+  var edad=(Date.now()-new Date(d.revisado))/60000, viejo=!(edad<VIEJO_MIN), nivel=viejo?'viejo':(d.nivel||'sin_dato');
+  $('hero').className='hero '+nivel;
+  $('h-k').textContent=TXT[nivel]||nivel;
+  $('h-t').textContent=viejo?'El vigía no se actualiza desde '+hora(d.revisado):d.titular;
+  $('h-d').textContent=viejo?'Revisa la pestaña Actions del repositorio: puede que GitHub haya pausado la tarea programada. Último estado conocido: '+(d.titular||''):(d.detalle||'');
+  $('h-m').innerHTML='<span>Revisado '+esc(hora(d.revisado))+' (hora Chile) · '+esc(hace(d.revisado))+'</span>'+(d.ultimo_aviso?'<span>Último aviso a Telegram: '+esc(hora(d.ultimo_aviso))+'</span>':'');
+  document.title=(nivel==='ok'?'':'['+(TXT[nivel]||nivel)+'] ')+'Vigía de Continuidad';
+  $('fav').href="data:image/svg+xml,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='12' fill='"+(COLOR[nivel]||'#888')+"'/></svg>");
+  var grupos={use1:[],sae1:[],global:[]};
+  (d.servicios||[]).forEach(function(s){(grupos[s.region]||grupos.global).push(s)});
+  $('regiones').innerHTML=['use1','sae1','global'].map(function(r){
+    var ss=grupos[r];if(!ss.length)return '';
+    return '<section class="card"><h3>'+esc(r==='global'?'Microsoft y telefonía':r)+' <small>'+esc(REG[r])+'</small></h3>'+ss.map(function(s){
+      return '<div class="svc"><b>'+(s.url?'<a href="'+esc(s.url)+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">'+esc(s.n)+'</a>':esc(s.n))+'</b>'+chip(s.estado)+'<span class="x">'+esc(s.nota)+'</span></div>'}).join('')+'</section>'}).join('');
+  var inc=d.incidentes||[], ot=d.otros||[];
+  $('n-inc').textContent=inc.length?inc.length+' abierto'+(inc.length>1?'s':''):'';
+  $('inc').innerHTML=inc.length?inc.map(incHtml).join(''):'<p class="empty">Ninguno abierto en use1, sae1 ni Azure/Entra.</p>';
+  $('otros').innerHTML=ot.length?ot.map(incHtml).join(''):'<p class="empty">Sin incidentes abiertos en otras regiones.</p>';
+  var h=d.historial||[];
+  $('hist').innerHTML=h.map(function(x){return '<i class="'+esc(x.nivel)+'" title="'+esc(hora(x.at)+' · '+(TXT[x.nivel]||x.nivel))+'"></i>'}).join('');
+  $('h-ini').textContent=h.length?hora(h[0].at):'';
+  var malos=h.filter(function(x){return x.nivel==='caida'||x.nivel==='degradado'}).length;
+  $('h-res').textContent=h.length+' revisiones · '+(malos?malos+' con problemas':'sin problemas');
+}
+function cargar(){
+  fetch('estado.json?t='+Date.now(),{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error(r.status);return r.json()})
+  .then(pintar).catch(function(){
+    $('hero').className='hero sin_dato';$('h-k').textContent='Sin conexión';
+    $('h-t').textContent='No se pudo leer estado.json';$('h-d').textContent='Se reintentará en un minuto.';})
+}
+$('recargar').addEventListener('click',cargar);
+cargar();setInterval(cargar,60000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden)cargar()});
+})();
+</script>
+</body>
+</html>
