@@ -473,10 +473,7 @@ def main():
         aws_otros = conservar("AWS", aws_otros, "otros")
     if azure["estado"] == "sin_dato":
         az_inc = conservar("Microsoft", az_inc, "incidentes")
-    tel = servicio("tel", "Telefonía", "Carrier BYOC", "global", "sin_dato",
-                   "Falta indicar qué carrier usan para vigilarlo.", [], None)
-
-    servicios = [gc["use1"], aws["use1"], gc["sae1"], aws["sae1"], azure, m365, tel]
+    servicios = [gc["use1"], aws["use1"], gc["sae1"], aws["sae1"], azure, m365]
     cuentan = [gc["use1"], aws["use1"], gc["sae1"], aws["sae1"], azure]
     if not gc_ok:
         nivel = "sin_dato"
