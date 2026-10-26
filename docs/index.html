@@ -573,6 +573,12 @@ function themeButton(cls,withLabel,tipCls){
   b.addEventListener('click',toggleTheme);THEME_SUBS.push(paint);paint(isDark());return b;
 }
 applyTheme();
+/* ===== Nombre de quien mira: se guarda solo en su navegador; sin nombre, la página es neutra ===== */
+function myName(){try{return (localStorage.getItem('cg-nombre')||'').trim().slice(0,60)}catch(e){return ''}}
+function myInitials(){var n=myName();if(!n)return 'e/';var w=n.split(/\s+/);return ((w[0]||'')[0]+((w[1]||'')[0]||'')).toUpperCase()}
+function firma(){var n=myName();return n?[n,'Continuidad Operacional · e-contact']:['Continuidad Operacional · e-contact']}
+function askName(cb){var cur=myName();var v=null;try{v=window.prompt('¿Cómo quieres que te salude el panel? Se guarda solo en este navegador. Déjalo vacío para quitarlo.',cur)}catch(e){}
+  if(v===null)return;v=String(v).trim().slice(0,60);try{if(v)localStorage.setItem('cg-nombre',v);else localStorage.removeItem('cg-nombre')}catch(e){}if(cb)cb()}
 try{MQD.addEventListener('change',function(){if(!prefTheme())applyTheme()})}catch(e){try{MQD.addListener(function(){if(!prefTheme())applyTheme()})}catch(e2){}}
 try{MQ.addEventListener('change',applyMode)}catch(e){try{MQ.addListener(applyMode)}catch(e2){}}
 
@@ -687,8 +693,8 @@ function stat(icon,label,value,sub,red){
 function vInicio(){
   var v=el('section','view');
   var hero=el('div','hero');var band=el('div','hero-band');band.appendChild(el('div','bloom'));hero.appendChild(band);
-  var hb=el('div','hero-body');var who=el('div','who');who.appendChild(el('div','avatar','DM'));
-  var wt=el('div');wt.appendChild(el('h1',null,'Diego Martínez Sánchez'));wt.appendChild(el('p',null,'Ingeniero de Continuidad Operacional · e-contact'));who.appendChild(wt);hb.appendChild(who);
+  var hb=el('div','hero-body');var who=el('div','who');var avb=el('button','avatar',myInitials());avb.type='button';avb.style.cursor='pointer';avb.setAttribute('aria-label',myName()?'Cambiar tu nombre':'Poner tu nombre');avb.title=avb.getAttribute('aria-label');avb.addEventListener('click',function(){askName(render)});who.appendChild(avb);
+  var wt=el('div');wt.appendChild(el('h1',null,myName()||'Centro de Continuidad Genesys'));wt.appendChild(el('p',null,'Continuidad Operacional · e-contact'));who.appendChild(wt);hb.appendChild(who);
   var acts=el('div','hero-acts');
   var rp=el('label','pill pill-green');rp.appendChild(document.createTextNode('Región'));var sel=el('select');sel.setAttribute('aria-label','Región de Genesys Cloud');
   REGIONS.forEach(function(r){var o=el('option',null,r.id+' · '+r.n);o.value=r.id;sel.appendChild(o)});sel.value=region().id;
@@ -855,13 +861,13 @@ function copy(txt,ok){
   try{navigator.clipboard.writeText(txt).then(function(){toast(ok)},fb)}catch(e){fb()}
 }
 document.getElementById('m-copy').addEventListener('click',function(){var i=cur;
-  copy(['Aviso Genesys Cloud: '+i.t,'','Qué cambia: '+i.s,'A quién afecta: '+audTxt(i),'Cuándo: '+when(i),'Qué hacer: '+(i.do||'Revisar si aplica.'),'Más info: '+i.url,'','Diego Martínez Sánchez','Ingeniero de Continuidad Operacional · e-contact'].join('\n'),'Aviso copiado')});
+  copy(['Aviso Genesys Cloud: '+i.t,'','Qué cambia: '+i.s,'A quién afecta: '+audTxt(i),'Cuándo: '+when(i),'Qué hacer: '+(i.do||'Revisar si aplica.'),'Más info: '+i.url,''].concat(firma()).join('\n'),'Aviso copiado')});
 function copySummary(){
   var R=region();var L=['Continuidad Genesys Cloud · '+fdl(TODAY),''];
   var U=urgent();L.push('Urgente:');if(!U.length)L.push('- Nada vence en los próximos 30 días');U.forEach(function(i){L.push('- '+i.t+': '+fd(i.eff)+' ('+rel(diff(i.eff))+')')});
   L.push('','Este mes:');month().forEach(function(i){L.push('- '+i.t+(i.k==='rel'?' (liberado '+fd(i.rel)+')':' (anunciado, sin fecha)'))});
   var first=nextRel(R,90).filter(function(x){return !x.f})[0];if(first)L.push('','Próxima liberación '+R.id+': '+fdl(first.iso)+', '+ftm(first.at)+' hora de Chile');
-  L.push('','Diego Martínez Sánchez · Continuidad Operacional · e-contact');copy(L.join('\n'),'Resumen copiado');
+  L.push('',firma().join(' · '));copy(L.join('\n'),'Resumen copiado');
 }
 
 var h=(location.hash||'').slice(1);if(VIEWS.some(function(v){return v.id===h}))S.view=h;
@@ -974,9 +980,9 @@ function regionPicker(){
 /* ----- Hoy ----- */
 function sHoy(){
   var v=el('section','screen');
-  var hd=el('div','hd');hd.appendChild(el('div','av','DM'));var ht=el('div','hd-t');
+  var hd=el('div','hd');var avm=el('button','av',myInitials());avm.type='button';avm.style.border='0';avm.style.cursor='pointer';avm.setAttribute('aria-label',myName()?'Cambiar tu nombre':'Poner tu nombre');avm.addEventListener('click',function(){askName(render)});hd.appendChild(avm);var ht=el('div','hd-t');
   var td=new Intl.DateTimeFormat('es-CL',{timeZone:TZ,weekday:'long',day:'numeric',month:'long'}).format(new Date(NOW));
-  ht.appendChild(el('p',null,td.charAt(0).toUpperCase()+td.slice(1)));ht.appendChild(el('h1',null,'Hola, Diego'));hd.appendChild(ht);hd.appendChild(regionPicker());v.appendChild(hd);
+  ht.appendChild(el('p',null,td.charAt(0).toUpperCase()+td.slice(1)));ht.appendChild(el('h1',null,myName()?'Hola, '+myName().split(/\s+/)[0]:'Hola'));hd.appendChild(ht);hd.appendChild(regionPicker());v.appendChild(hd);
 
   var U=urgent();var nxt=U.filter(function(i){return diff(i.eff)>=0})[0];
   var t=el('div','today');t.appendChild(el('span','k','Lo más próximo'));
@@ -1079,13 +1085,13 @@ function copy(txt,ok){
   try{navigator.clipboard.writeText(txt).then(function(){toast(ok)},fb)}catch(e){fb()}
 }
 document.getElementById('s-copy').addEventListener('click',function(){var i=cur;
-  copy(['Aviso Genesys Cloud: '+i.t,'','Qué cambia: '+i.s,'A quién afecta: '+audTxt(i),'Cuándo: '+when(i),'Qué hacer: '+(i.do||'Revisar si aplica.'),'Más info: '+i.url,'','Diego Martínez Sánchez','Ingeniero de Continuidad Operacional · e-contact'].join('\n'),'Aviso copiado')});
+  copy(['Aviso Genesys Cloud: '+i.t,'','Qué cambia: '+i.s,'A quién afecta: '+audTxt(i),'Cuándo: '+when(i),'Qué hacer: '+(i.do||'Revisar si aplica.'),'Más info: '+i.url,''].concat(firma()).join('\n'),'Aviso copiado')});
 function copySummary(){
   var R=region();var L=['Continuidad Genesys Cloud · '+fdl(TODAY),''];
   var U=urgent();L.push('Urgente:');if(!U.length)L.push('- Nada vence en los próximos 30 días');U.forEach(function(i){L.push('- '+i.t+': '+fd(i.eff)+' ('+rel(diff(i.eff))+')')});
   L.push('','Este mes:');month().forEach(function(i){L.push('- '+i.t+(i.k==='rel'?' (liberado '+fd(i.rel)+')':' (anunciado, sin fecha)'))});
   var first=nextRel(R,90).filter(function(x){return !x.f})[0];if(first)L.push('','Próxima liberación '+R.id+': '+fdl(first.iso)+', '+ftm(first.at)+' hora de Chile');
-  L.push('','Diego Martínez Sánchez · Continuidad Operacional · e-contact');copy(L.join('\n'),'Resumen copiado');
+  L.push('',firma().join(' · '));copy(L.join('\n'),'Resumen copiado');
 }
 estSubscribe(render);
 render();
