@@ -44,7 +44,11 @@ jobs:
           git add docs/estado.json
           if git diff --cached --quiet; then exit 0; fi
           git commit -q -m "estado $(date -u +%Y-%m-%dT%H:%MZ)"
-          for i in 1 2 3; do git pull -q --rebase && git push -q && break; sleep 5; done
+          for i in 1 2 3 4; do
+            if git pull -q --rebase && git push -q; then exit 0; fi
+            echo "No se pudo guardar (intento $i), reintentando..."; sleep $((i*5))
+          done
+          echo "::error::No se pudo guardar docs/estado.json en el repositorio"; exit 1
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
