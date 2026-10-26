@@ -109,7 +109,7 @@ function pintar(d){
   $('hero').className='hero '+nivel;
   $('h-k').textContent=TXT[nivel]||nivel;
   $('h-t').textContent=viejo?'El vigía no se actualiza desde '+hora(d.revisado):d.titular;
-  $('h-d').textContent=viejo?'Revisa la pestaña Actions del repositorio: puede que GitHub haya pausado la tarea programada. Último estado conocido: '+(d.titular||''):(d.detalle||'');
+  $('h-d').textContent=viejo?'Revisa en cron-job.org que la tarea «Vigía Genesys» siga activa y, en GitHub, la pestaña Actions del repositorio. Último estado conocido: '+(d.titular||''):(d.detalle||'');
   $('h-m').innerHTML='<span>Revisado '+esc(hora(d.revisado))+' (hora Chile) · '+esc(hace(d.revisado))+'</span>'+(d.ultimo_aviso?'<span>Último aviso a Telegram: '+esc(hora(d.ultimo_aviso))+'</span>':'');
   document.title=(nivel==='ok'?'':'['+(TXT[nivel]||nivel)+'] ')+'Vigía de Continuidad';
   $('fav').href="data:image/svg+xml,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='12' fill='"+(COLOR[nivel]||'#888')+"'/></svg>");

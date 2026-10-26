@@ -45,6 +45,7 @@ ORDEN = ["ok", "mant", "aviso", "degradado", "caida"]
 HISTORIAL_MAX = 288            # 24 h con revisiones cada 5 min
 REAVISO = timedelta(hours=3)   # repetir aviso si el problema sigue
 AWS_VENTANA = timedelta(hours=24)
+OTROS_VENTANA = timedelta(hours=72)  # eventos de otras regiones: solo si son recientes
 TZ_CHILE = ZoneInfo("America/Santiago")
 
 # Palabras que, si aparecen en el feed de Azure, lo hacen relevante para nosotros
@@ -314,7 +315,7 @@ def revisar_aws(texto, now):
             incidentes.append(fila)
             for r in REGIONES:
                 por_region[r].append(fila)
-        elif ev["region"] not in aws_reg:
+        elif ev["region"] not in aws_reg and now - ev["fecha"] <= OTROS_VENTANA:
             fila["region"] = ev["region"] or "global"
             otros.append(fila)
 
@@ -337,25 +338,27 @@ def revisar_azure(texto):
     m365 = servicio("ms-365", "Microsoft", "Microsoft 365 / Teams", "global", "sin_dato", nota_365, [], M365_URL)
     if texto is None:
         return (servicio("ms-azure", "Microsoft", "Azure y Entra ID (inicio de sesión)", "global", "sin_dato",
-                         "No se pudo consultar la fuente", [], AZ_URL), m365, [])
+                         "No se pudo consultar la fuente", [], AZ_URL), m365, [], [])
     try:
         raiz = ET.fromstring(texto.encode("utf-8"))
     except ET.ParseError:
         return revisar_azure(None)
-    items, incidentes, m365_items = [], [], []
+    items, incidentes, otros, m365_items = [], [], [], []
     for it in raiz.iter("item"):
         titulo = (it.findtext("title") or "").strip()
         desc = re.sub(r"<[^>]+>", " ", it.findtext("description") or "")
         texto_n = norm(titulo + " " + desc)
         relevante = any(k in texto_n for k in AZ_CLAVE)
-        sev = "degradado" if relevante else "aviso"
         try:
             fecha = parsedate_to_datetime(it.findtext("pubDate") or "")
         except (TypeError, ValueError):
             fecha = None
         fila = {"t": titulo, "fuente": "Microsoft", "region": "global", "estado": "Activo en el feed de Azure",
                 "desde": iso(fecha), "act": iso(fecha),
-                "url": (it.findtext("link") or AZ_URL).strip(), "sev": sev}
+                "url": (it.findtext("link") or AZ_URL).strip(), "sev": "degradado"}
+        if not relevante:  # incidente de Azure en otra región o servicio: se muestra, pero no sube el nivel
+            otros.append(dict(fila, region="otra región", sev="aviso"))
+            continue
         items.append(fila)
         incidentes.append(fila)
         if any(k in texto_n for k in AZ_M365):
@@ -370,7 +373,7 @@ def revisar_azure(texto):
     if m365_items:
         m365 = dict(m365, estado="aviso", nota="El feed de Azure menciona: " + "; ".join(m365_items),
                     afectados=m365_items)
-    return azure, m365, incidentes
+    return azure, m365, incidentes, otros
 
 
 # ---------------------------------------------------------------- Telegram
@@ -459,7 +462,7 @@ def main():
 
     gc, gc_inc, gc_otros, gc_ok = revisar_genesys(bajar(GC_API), now)
     aws, aws_inc, aws_otros = revisar_aws(bajar(AWS_RSS), now)
-    azure, m365, az_inc = revisar_azure(bajar(AZ_RSS))
+    azure, m365, az_inc, az_otros = revisar_azure(bajar(AZ_RSS))
 
     # Si una fuente no respondió, se conservan sus incidentes anteriores para no
     # perderlos (y no avisarlos como "nuevos" cuando vuelva).
@@ -481,7 +484,7 @@ def main():
         nivel = peor([s["estado"] for s in cuentan])
 
     incidentes = gc_inc + aws_inc + az_inc
-    otros = (gc_otros + aws_otros)[:5]
+    otros = (gc_otros + aws_otros + az_otros)[:5]
 
     # titular y detalle
     if nivel == "sin_dato":
