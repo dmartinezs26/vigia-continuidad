@@ -457,8 +457,20 @@ def main():
         prev = {}
 
     if os.environ.get("VIGIA_PRUEBA", "").lower() in ("1", "true", "si", "sí", "yes"):
-        telegram("Prueba del vigía de continuidad: si ves esto, los avisos por Telegram funcionan."
+        telegram("🧪 PRUEBA del vigía de continuidad: si ves esto, los avisos por Telegram funcionan.\n"
+                 "A continuación, un EJEMPLO de cómo se ve un aviso de caída (datos inventados, no es real)."
                  + (f"\nPanel: {url_panel()}" if url_panel() else ""))
+        ej_srv = servicio("gc-sae1", "Genesys Cloud", "Genesys Cloud · Americas (São Paulo)", "sae1", "degradado",
+                          "Inbound Calls: Partial Outage", ["Inbound Calls"], GC_URL)
+        ejemplo = {"nivel": "degradado", "titular": "Degradación de Inbound Calls en sae1",
+                   "detalle": "EJEMPLO DE PRUEBA. Genesys sae1: Inbound Calls: Partial Outage. Genesys use1, AWS y Azure sin problemas.",
+                   "servicios": [ej_srv],
+                   "incidentes": [{"t": "Elevated error rates on inbound calls - Americas (São Paulo)",
+                                   "fuente": "Genesys Cloud", "region": "sae1", "estado": "Investigando",
+                                   "desde": iso(now - timedelta(minutes=12)), "act": iso(now), "url": GC_URL}],
+                   "revisado": iso(now)}
+        telegram("🧪 EJEMPLO (no es real)\n" + armar_mensaje("problema", ejemplo,
+                                                            {clave(ejemplo["incidentes"][0])}))
 
     gc, gc_inc, gc_otros, gc_ok = revisar_genesys(bajar(GC_API), now)
     aws, aws_inc, aws_otros = revisar_aws(bajar(AWS_RSS), now)
