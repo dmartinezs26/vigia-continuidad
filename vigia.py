@@ -138,14 +138,38 @@ def revisar_genesys(texto, now):
 
     comps = datos.get("components") or []
     grupos = {c["id"]: c for c in comps if c.get("group")}
-    region_grupo = {}
-    for gid, g in grupos.items():
-        n = norm(g.get("name"))
+
+    def region_por_nombre(nombre):
+        n = norm(nombre)
         for r, cfg in REGIONES.items():
             if n == cfg["gc"]:
-                region_grupo[gid] = r
-    region_comp = {c["id"]: region_grupo.get(c.get("group_id")) or region_grupo.get(c["id"]) for c in comps}
-    nombre_grupo = {c["id"]: (grupos.get(c.get("group_id")) or {}).get("name") for c in comps}
+                return r
+        return None
+
+    def parece_region(nombre):
+        return bool(nombre) and "(" in nombre and nombre.strip().endswith(")")
+
+    # La página puede agrupar por región (grupo "Americas (US East)" con hijos "Platform"...)
+    # o por componente (grupo "Platform" con hijos "Americas (US East)"...). Se aceptan ambas.
+    region_comp, etiqueta, region_txt = {}, {}, {}
+    for c in comps:
+        if c.get("group"):
+            continue
+        grupo = (grupos.get(c.get("group_id")) or {}).get("name")
+        r_grupo, r_hijo = region_por_nombre(grupo), region_por_nombre(c.get("name"))
+        if r_grupo:
+            region_comp[c["id"]], etiqueta[c["id"]] = r_grupo, c.get("name")
+        elif r_hijo:
+            region_comp[c["id"]], etiqueta[c["id"]] = r_hijo, grupo or c.get("name")
+        else:
+            etiqueta[c["id"]] = c.get("name")
+        region_txt[c["id"]] = (c.get("name") if parece_region(c.get("name"))
+                               else grupo if parece_region(grupo) else c.get("name"))
+    for gid, g in grupos.items():
+        r = region_por_nombre(g.get("name"))
+        if r:
+            region_comp[gid] = r
+        region_txt[gid] = g.get("name")
 
     def regiones_de(evento):
         regs, otras = set(), set()
@@ -153,8 +177,8 @@ def revisar_genesys(texto, now):
             r = region_comp.get(c.get("id"))
             if r:
                 regs.add(r)
-            elif nombre_grupo.get(c.get("id")) or c.get("id") in grupos:
-                otras.add(nombre_grupo.get(c.get("id")) or grupos[c["id"]].get("name"))
+            elif region_txt.get(c.get("id")):
+                otras.add(region_txt[c["id"]])
         t = norm(evento.get("name"))
         for r, cfg in REGIONES.items():
             if any(k in t for k in cfg["titulo"]):
@@ -215,7 +239,7 @@ def revisar_genesys(texto, now):
         malos = [c for c in hijos if c.get("status") != "operational"]
         est = peor([COMP_ESTADO.get(c.get("status"), "aviso") for c in hijos] + estados[r])
         if malos:
-            nota = "; ".join(f"{c['name']}: {COMP_TXT.get(c.get('status'), c.get('status'))}" for c in malos)
+            nota = "; ".join(f"{etiqueta[c['id']]}: {COMP_TXT.get(c.get('status'), c.get('status'))}" for c in malos)
         else:
             nota = f"{len(hijos)} de {len(hijos)} componentes operativos"
             if "mant" in estados[r]:
@@ -223,8 +247,10 @@ def revisar_genesys(texto, now):
             elif estados[r]:
                 nota += "; hay un incidente abierto que menciona la región"
         salida[r] = servicio(f"gc-{r}", "Genesys Cloud", nombres[r], r, est, nota,
-                             [c["name"] for c in malos], GC_URL)
-    return salida, incidentes, otros[:5], True
+                             [etiqueta[c["id"]] for c in malos], GC_URL)
+    # Si no se encontró ninguna de nuestras regiones, se trata como fuente caída (avisa).
+    ok = all(s["estado"] != "sin_dato" for s in salida.values())
+    return salida, incidentes, otros[:5], ok
 
 
 # ---------------------------------------------------------------- AWS
@@ -481,7 +507,7 @@ def main():
     detalle = ". ".join(partes) + "."
 
     estado = {
-        "revisado": iso(now), "nivel": nivel, "titular": titular, "detalle": detalle,
+        "revisado": iso(now), "intervalo": "cada 5 minutos", "nivel": nivel, "titular": titular, "detalle": detalle,
         "servicios": servicios,
         "incidentes": [{k: v for k, v in i.items() if k != "sev"} for i in incidentes],
         "otros": [{k: v for k, v in i.items() if k != "sev"} for i in otros],
