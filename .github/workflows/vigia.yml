@@ -51,6 +51,9 @@ jobs:
           done
           echo "::error::No se pudo guardar docs/estado.json en el repositorio"; exit 1
 
+      - name: Generar resumen en texto (para Copilot y lectores)
+        run: node tools/resumen.js
+
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
