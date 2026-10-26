@@ -1,144 +1,1062 @@
-<!doctype html>
-<html lang="es">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Vigía de Continuidad</title>
-<meta name="description" content="Estado en vivo de Genesys Cloud, AWS y Microsoft para use1 y sae1.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='12' fill='%231E8A5A'/%3E%3C/svg%3E" id="fav">
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Centro de Continuidad Genesys</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
 <style>
-:root{
-  --canvas:#EEEDF3; --card:#FFFFFF; --ink:#16151C; --muted:#6C6A78; --line:#E6E4EE; --soft:#F5F4F8;
-  --red:#D93A3F; --red-bg:#FDEBEC; --amber:#B4620E; --amber-bg:#FFF1DF; --green:#1E8A5A; --green-bg:#E3F5EC;
-  --blue:#3E57C9; --blue-bg:#E8ECFC; --grey-bg:#ECEBF1; --accent:#4B3FB8;
+/* Layout: una sola página con dos diseños. Pantalla ancha: riel lateral oscuro y tarjetas sobre lienzo lavanda. Teléfono: una columna con pestañas abajo. Arriba de todo, siempre, la franja de estado en vivo. Un solo look claro, deliberado. */
+:root{color-scheme:light;
+  --canvas:#E9E8EE; --frame:#F3F2F7; --card:#FFFFFF; --ink:#16151C; --muted:#6C6A78; --line:#ECEAF2;
+  --rail:#111116; --rail-ink:#B9B7C6; --lav:#DCD5FF; --lav-2:#C7BDFB; --lav-ink:#4B3FB8; --pink:#F6C5DF; --pink-2:#EFA9CF;
+  --red:#D93A3F; --red-bg:#FDEBEC; --amber:#B4620E; --amber-bg:#FFF1DF; --green:#1E8A5A; --green-bg:#E3F5EC; --blue:#3E57C9; --blue-bg:#E8ECFC;
   --font:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  --dark:#111116; --dark-2:#24232C; --dark-ink:#B9B7C6; --soft:#F5F4F8; --es-grey-bg:#ECEBF1;
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --canvas:#0F0F14; --card:#1A1A22; --ink:#EDECF3; --muted:#A09EAE; --line:#2A2933; --soft:#22212B;
-  --red:#FF6B6F; --red-bg:#3A1A1C; --amber:#F2A54A; --amber-bg:#3A2A16; --green:#4CCB8E; --green-bg:#173126;
-  --blue:#8CA0FF; --blue-bg:#1E2445; --grey-bg:#26252F; --accent:#B4A9FF;}}
-*{box-sizing:border-box}
-html,body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45}
-h1,h2,h3,p{margin:0}
-a{color:var(--accent)}
-.wrap{max-width:1100px;margin:0 auto;padding:20px max(16px,env(safe-area-inset-left)) 40px;display:flex;flex-direction:column;gap:18px}
-.top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px}
-.top h1{font-size:22px;font-weight:800;letter-spacing:-.4px}
-.top p{font-size:13px;color:var(--muted)}
-.btn{border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:13px;font-weight:700;padding:7px 14px;border-radius:999px;cursor:pointer}
-.ok{--bg:var(--green-bg);--fg:var(--green)} .mant{--bg:var(--blue-bg);--fg:var(--blue)}
-.aviso,.degradado{--bg:var(--amber-bg);--fg:var(--amber)} .caida{--bg:var(--red);--fg:#fff}
-.sin_dato,.viejo{--bg:var(--grey-bg);--fg:var(--muted)}
-.hero{background:var(--bg);color:var(--fg);border-radius:24px;padding:22px;display:flex;flex-direction:column;gap:8px}
-.hero .k{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase}
-.hero .dot{width:12px;height:12px;border-radius:50%;background:currentColor;box-shadow:0 0 0 4px color-mix(in srgb,currentColor 20%,transparent)}
-@media (prefers-reduced-motion:no-preference){.caida .dot,.degradado .dot{animation:p 1.4s ease-in-out infinite}@keyframes p{50%{box-shadow:0 0 0 10px transparent}}}
-.hero h2{font-size:clamp(24px,5vw,34px);font-weight:800;letter-spacing:-.8px;line-height:1.1;text-wrap:balance}
-.hero p{font-size:14px;max-width:75ch;opacity:.92}
-.hero .meta{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12px;font-weight:700;opacity:.9}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
-.card{background:var(--card);border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:2px;min-width:0}
-.card h3{font-size:15px;font-weight:800;display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:4px}
-.card h3 small{font-size:12px;color:var(--muted);font-weight:600}
-.svc{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:10px 0;border-top:1px solid var(--line)}
-.svc:first-of-type{border-top:0}
-.svc b{font-size:14px}
-.svc .x{grid-column:1/-1;font-size:12px;color:var(--muted);overflow-wrap:anywhere}
-.chip{display:inline-block;font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;white-space:nowrap;align-self:start;background:var(--bg);color:var(--fg)}
-.inc{display:flex;flex-direction:column;gap:2px;padding:10px 0;border-top:1px solid var(--line)}
-.inc:first-of-type{border-top:0}
-.inc b{font-size:14px}
-.inc span{font-size:12px;color:var(--muted)}
-.empty{font-size:13px;color:var(--muted);padding:6px 0}
-.hist{display:flex;gap:1px;align-items:stretch;height:34px;margin-top:6px}
-.hist i{flex:1;min-width:1px;border-radius:2px;background:var(--fg);opacity:.9}
-.hist i.ok{opacity:.35} .hist i.caida{background:var(--red)}
-.hist-l{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px;font-variant-numeric:tabular-nums}
-.links{display:flex;flex-wrap:wrap;gap:8px}
-.links a{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:8px 13px;font-size:13px;font-weight:700;text-decoration:none;color:var(--ink)}
-.foot{font-size:12px;color:var(--muted)}
+html.M{color-scheme:light;
+  --canvas:#F1F0F5; --card:#FFFFFF; --ink:#16151C; --muted:#6C6A78; --line:#ECEAF2; --soft:#F5F4F8;
+  --dark:#111116; --dark-2:#24232C; --dark-ink:#B9B7C6; --lav:#DCD5FF; --lav-2:#C7BDFB; --lav-ink:#4B3FB8; --pink:#F6C5DF;
+  --red:#D93A3F; --red-bg:#FDEBEC; --amber:#B4620E; --amber-bg:#FFF1DF; --green:#1E8A5A; --green-bg:#E3F5EC; --blue:#3E57C9; --blue-bg:#E8ECFC;
+  --font:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;}
+html.W *{box-sizing:border-box}
+html.W [hidden]{display:none!important}
+html.W,html.W body{background:var(--canvas)}
+html.W body{color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.45}
+html.W h1,html.W h2,html.W h3,html.W p{margin:0}
+html.W button{font:inherit;color:inherit}
+html.W a{color:var(--lav-ink)}
+html.W :focus-visible{outline:2px solid var(--lav-ink);outline-offset:2px}
+html.W .app{max-width:1320px;margin:0 auto;padding-block:20px 28px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:68px minmax(0,1fr);gap:18px;align-items:start}
+html.W .frame{background:var(--frame);border-radius:28px;padding:22px;min-width:0;min-height:calc(100vh - 48px)}
+html.W .rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 20px);background:var(--rail);border-radius:34px;padding:18px 0;display:flex;flex-direction:column;align-items:center;gap:6px;height:calc(100vh - 40px);max-height:760px;z-index:5}
+html.W .logo{width:40px;height:40px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:17px;letter-spacing:-1px;margin-bottom:14px}
+html.W .nav-b{position:relative;width:44px;height:44px;border-radius:50%;border:0;background:transparent;color:var(--rail-ink);display:grid;place-items:center;cursor:pointer;transition:background .18s,color .18s}
+html.W .nav-b:hover{color:#fff;background:rgba(255,255,255,.08)}
+html.W .nav-b[aria-current="page"]{background:var(--lav);color:var(--ink)}
+html.W .nav-b svg{width:20px;height:20px}
+html.W .nav-b .tip{position:absolute;left:54px;top:50%;transform:translateY(-50%);background:var(--rail);color:#fff;font-size:12px;font-weight:600;padding:5px 10px;border-radius:8px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s}
+html.W .nav-b:hover .tip,html.W .nav-b:focus-visible .tip{opacity:1}
+html.W .rail .sp{flex:1}
+@media (max-width:760px){html.W .app{grid-template-columns:minmax(0,1fr);padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+html.W .frame{padding:16px;border-radius:22px;min-height:0}
+html.W .rail{position:fixed;top:auto;bottom:calc(10px + env(safe-area-inset-bottom,0px));left:max(12px,env(safe-area-inset-left,0px));right:max(12px,env(safe-area-inset-right,0px));height:auto;max-height:none;flex-direction:row;justify-content:space-around;padding:8px 10px;border-radius:26px}
+html.W .logo,html.W .rail .sp{display:none}
+html.W .nav-b{width:40px;height:40px}
+html.W .nav-b .tip{display:none}}
+html.W .view{display:flex;flex-direction:column;gap:18px}
+@media (prefers-reduced-motion:no-preference){html.W .view{animation:fade .28s ease-out}
+@keyframes fade{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:none}}}
+html.W .vh{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:12px 20px}
+html.W .vh h1{font-size:28px;font-weight:800;letter-spacing:-.6px;text-wrap:balance}
+html.W .vh p{color:var(--muted);margin-top:4px;max-width:62ch}
+html.W .seg{display:flex;flex-wrap:wrap;gap:4px;background:var(--card);border-radius:999px;padding:4px}
+html.W .seg button{border:0;background:transparent;padding:6px 12px;border-radius:999px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer}
+html.W .seg button[aria-pressed="true"]{background:var(--rail);color:#fff}
+html.W .card{background:var(--card);border-radius:20px;padding:18px 20px;min-width:0;display:flex;flex-direction:column;gap:12px}
+html.W .card-h{display:flex;align-items:center;justify-content:space-between;gap:10px}
+html.W .card-h h2{font-size:16px;font-weight:700}
+html.W .card-h .aside{font-size:13px;color:var(--muted)}
+html.W .card-h .big-r{font-size:22px;font-weight:800;letter-spacing:-.5px}
+html.W .g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+html.W .g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+@media (max-width:1100px){html.W .g4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:900px){html.W .g2{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:480px){html.W .g4{grid-template-columns:minmax(0,1fr)}}
+html.W .hero{background:var(--card);border-radius:22px;overflow:hidden}
+html.W .hero-band{height:108px;position:relative;background:linear-gradient(100deg,#CFC6FB 0%,#E4DDFD 45%,#F3D3E8 100%);overflow:hidden}
+html.W .bloom{position:absolute;right:6%;top:-40px;width:220px;height:220px;border-radius:50%;background:conic-gradient(from 20deg,#B9A9F8,#E9A6D3,#C9B8FF,#F2B6DA,#B9A9F8);filter:blur(1px);opacity:.9;-webkit-mask:radial-gradient(circle,transparent 18%,#000 19%);mask:radial-gradient(circle,transparent 18%,#000 19%)}
+html.W .bloom::after{content:"";position:absolute;inset:22%;border-radius:50%;background:conic-gradient(from 200deg,#D8CCFF,#F5C8E1,#CDBEFF,#D8CCFF)}
+html.W .hero-body{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px 20px;padding:0 22px 18px;margin-top:-36px;position:relative}
+html.W .who{display:flex;align-items:flex-end;gap:16px;min-width:0}
+html.W .avatar{width:84px;height:84px;border-radius:50%;background:linear-gradient(140deg,#16151C,#3A3550);color:#fff;display:grid;place-items:center;font-size:28px;font-weight:800;border:5px solid var(--card);flex:none}
+html.W .who h1{font-size:24px;font-weight:800;letter-spacing:-.5px;line-height:1.15}
+html.W .who p{color:var(--muted);font-size:13px}
+html.W .hero-acts{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+html.W .pill{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;padding:7px 12px;border-radius:999px}
+html.W .pill-green{background:var(--green-bg);color:var(--green)}
+html.W .pill-green::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+html.W .pill select{font:inherit;font-weight:600;border:0;background:transparent;color:inherit;cursor:pointer;padding:0}
+html.W .btn-dark{display:inline-flex;align-items:center;gap:8px;border:0;background:var(--rail);color:#fff;font-weight:600;font-size:13px;padding:9px 16px;border-radius:999px;cursor:pointer}
+html.W .btn-dark svg{width:15px;height:15px}
+html.W .btn-dark:hover{background:#2A2933}
+html.W .btn-ghost{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--card);font-weight:600;font-size:13px;padding:8px 14px;border-radius:999px;cursor:pointer;text-decoration:none;color:var(--ink)}
+html.W .stat{background:var(--card);border-radius:20px;padding:16px 18px;display:flex;flex-direction:column;gap:8px;min-width:0;transition:transform .2s ease,box-shadow .2s ease}
+html.W .stat:hover{transform:translateY(-4px);box-shadow:0 12px 28px rgba(40,30,90,.08)}
+html.W .stat-l{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--ink)}
+html.W .ico{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--frame);color:var(--ink);flex:none}
+html.W .ico svg{width:15px;height:15px}
+html.W .stat-v{font-size:30px;font-weight:800;letter-spacing:-1px;line-height:1.05;font-variant-numeric:tabular-nums}
+html.W .stat-v.red{color:var(--red)}
+html.W .stat-s{font-size:12px;color:var(--muted)}
+html.W .rows{display:flex;flex-direction:column}
+html.W .r{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;padding:10px 8px;margin:0 -8px;border:0;background:transparent;text-align:left;cursor:pointer;border-radius:12px;width:calc(100% + 16px)}
+html.W .r:hover{background:var(--frame)}
+html.W .r .t{font-weight:600;font-size:14px;line-height:1.3}
+html.W .r .s{font-size:12px;color:var(--muted);margin-top:1px}
+html.W .r .days{font-size:22px;font-weight:800;letter-spacing:-.6px;color:var(--red);font-variant-numeric:tabular-nums;white-space:nowrap}
+html.W .r .days small{font-size:12px;font-weight:600;margin-left:2px}
+html.W .chip{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+html.W .c-red{background:var(--red-bg);color:var(--red)}
+html.W .c-amber{background:var(--amber-bg);color:var(--amber)}
+html.W .c-green{background:var(--green-bg);color:var(--green)}
+html.W .c-blue{background:var(--blue-bg);color:var(--blue)}
+html.W .c-lav{background:var(--lav);color:var(--lav-ink)}
+html.W .c-grey{background:var(--frame);color:var(--muted)}
+html.W .c-dark{background:var(--rail);color:#fff}
+html.W .empty{color:var(--muted);font-size:13px;padding:6px 0}
+html.W .bars{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;align-items:end;height:170px;padding-top:26px}
+html.W .bar{display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end;position:relative}
+html.W .bar .col{width:100%;max-width:44px;border-radius:999px;background:var(--frame);height:100%;display:flex;align-items:flex-end;overflow:hidden}
+html.W .bar .fill{width:100%;border-radius:999px;background:var(--pink);min-height:10px}
+html.W .bar.lav .fill{background:var(--lav-2)}
+html.W .bar.now .fill{background:#A99BF4}
+html.W .bar .m{font-size:12px;color:var(--muted);font-weight:600;text-transform:capitalize}
+html.W .bar .tipv{position:absolute;top:-4px;background:var(--rail);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
+html.W .ev{display:grid;grid-template-columns:62px minmax(0,1fr);gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+html.W .ev:first-child{border-top:0}
+html.W .ev .d{font-weight:700;font-size:13px;font-variant-numeric:tabular-nums}
+html.W .ev .e{display:flex;align-items:center;gap:8px;min-width:0;font-size:13px}
+html.W .ev .e span:last-child{color:var(--muted);font-size:12px}
+html.W .dot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--lav-2)}
+html.W .dot.dep{background:var(--red)}
+html.W .dot.frz{background:transparent;border:2px solid var(--muted)}
+html.W .coll{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:18px;align-items:start}
+@media (max-width:1100px){html.W .coll{grid-template-columns:minmax(0,1fr)}}
+html.W .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+html.W .tile{background:var(--card);border:0;border-radius:18px;padding:10px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:10px;transition:transform .2s ease,box-shadow .2s ease;min-width:0}
+html.W .tile:hover{transform:translateY(-4px);box-shadow:0 14px 30px rgba(40,30,90,.10)}
+html.W .thumb{position:relative;border-radius:12px;aspect-ratio:16/9;max-width:100%;display:grid;place-items:center;overflow:hidden}
+html.W .thumb .chip{position:absolute;left:8px;top:8px}
+html.W .thumb .num{font-size:40px;font-weight:800;letter-spacing:-1.5px;color:var(--ink);line-height:1}
+html.W .thumb .num small{font-size:14px;font-weight:700;margin-left:3px;letter-spacing:0}
+html.W .thumb .word{font-size:18px;font-weight:800;color:var(--ink)}
+html.W .thumb svg{width:34px;height:34px;color:var(--ink);opacity:.75}
+html.W .th-red{background:linear-gradient(135deg,#FBD3D6,#F6C5DF)}
+html.W .th-amber{background:linear-gradient(135deg,#FFE3C2,#F8D6E6)}
+html.W .th-lav{background:linear-gradient(135deg,#DCD5FF,#EADFFD)}
+html.W .th-blue{background:linear-gradient(135deg,#D6E0FD,#E5DEFC)}
+html.W .th-green{background:linear-gradient(135deg,#D3F1E2,#E2EEFB)}
+html.W .th-grey{background:linear-gradient(135deg,#ECEBF1,#E3E1EA)}
+html.W .tile .t{font-weight:700;font-size:14px;line-height:1.3;padding:0 4px}
+html.W .tile .s{font-size:12px;color:var(--muted);padding:0 4px 4px;display:flex;justify-content:space-between;gap:8px}
+html.W .side{display:flex;flex-direction:column;gap:6px}
+html.W .side button{display:flex;align-items:center;gap:10px;border:0;background:transparent;padding:9px 10px;border-radius:12px;cursor:pointer;text-align:left;width:100%}
+html.W .side button:hover{background:var(--frame)}
+html.W .side button[aria-pressed="true"]{background:var(--frame)}
+html.W .side .sq{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;background:var(--frame);flex:none}
+html.W .side button[aria-pressed="true"] .sq{background:var(--rail);color:#fff}
+html.W .side .sq svg{width:14px;height:14px}
+html.W .side .n{margin-left:auto;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+html.W .side .lbl{font-weight:600;font-size:13px}
+html.W .total{display:flex;align-items:baseline;gap:8px;border-top:1px solid var(--line);padding-top:12px;margin-top:6px}
+html.W .total b{font-size:26px;font-weight:800}
+html.W .total span{font-size:12px;color:var(--muted)}
+html.W .step .k{font-size:12px;font-weight:700;color:var(--lav-ink)}
+html.W .step h3{font-size:16px;font-weight:700}
+html.W .step p{color:var(--muted)}
+html.W .tbl-wrap{overflow-x:auto}
+html.W table{width:100%;border-collapse:collapse;font-size:13px;min-width:480px}
+html.W th,html.W td{text-align:left;padding:10px 8px;border-top:1px solid var(--line);vertical-align:top}
+html.W th{font-size:12px;color:var(--muted);font-weight:600;border-top:0}
+html.W .tpl{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;background:var(--frame);border-radius:12px;padding:14px;white-space:pre-wrap;line-height:1.6}
+html.W .scrim{position:fixed;inset:0;background:rgba(17,17,22,.35);z-index:30;backdrop-filter:blur(2px)}
+html.W .modal{position:fixed;z-index:31;left:50%;top:50%;transform:translate(-50%,-50%);width:min(540px,calc(100vw - 32px));max-height:calc(100vh - 48px);overflow:auto;background:var(--card);border-radius:22px;padding:22px;display:flex;flex-direction:column;gap:14px;box-shadow:0 30px 70px rgba(20,15,50,.25)}
+html.W .modal h2{font-size:20px;font-weight:800;letter-spacing:-.3px;line-height:1.25}
+html.W .modal .en{font-size:12px;color:var(--muted);margin-top:4px}
+html.W .modal dl{display:grid;grid-template-columns:108px minmax(0,1fr);gap:8px 12px;margin:0}
+html.W .modal dt{color:var(--muted)}
+html.W .modal dd{margin:0}
+html.W .modal .acts{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+html.W .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--rail);color:#fff;font-weight:600;font-size:13px;padding:10px 16px;border-radius:999px;z-index:40}
+@media (max-width:760px){html.W .toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}}
+html.W .offscreen{position:absolute;left:-9999px;top:0;width:1px;height:1px}
+html.M *{box-sizing:border-box}
+html.M [hidden]{display:none!important}
+html.M,html.M body{background:var(--canvas)}
+html.M body{color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+html.M h1,html.M h2,html.M h3,html.M p{margin:0}
+html.M button{font:inherit;color:inherit}
+html.M a{color:var(--lav-ink)}
+html.M :focus-visible{outline:2px solid var(--lav-ink);outline-offset:2px}
+html.M .phone{max-width:480px;margin:0 auto;padding-top:18px;padding-bottom:calc(104px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
+html.M .screen{display:flex;flex-direction:column;gap:18px}
+@media (prefers-reduced-motion:no-preference){html.M .screen{animation:in .25s ease-out}
+@keyframes in{from{opacity:.4;transform:translateY(8px)}to{opacity:1;transform:none}}}
+html.M .hd{display:flex;align-items:center;gap:12px}
+html.M .av{width:46px;height:46px;border-radius:50%;background:linear-gradient(140deg,#CFC6FB,#F3C9E3);display:grid;place-items:center;font-weight:800;font-size:16px;flex:none}
+html.M .hd-t{flex:1;min-width:0}
+html.M .hd-t p{font-size:13px;color:var(--muted)}
+html.M .hd-t h1{font-size:20px;font-weight:800;letter-spacing:-.4px}
+html.M .reg{display:inline-flex;align-items:center;gap:6px;background:var(--card);border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700}
+html.M .reg::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--green)}
+html.M .reg select{font:inherit;border:0;background:transparent;color:var(--ink);padding:0;cursor:pointer}
+html.M .title{font-size:26px;font-weight:800;letter-spacing:-.6px}
+html.M .sub{font-size:14px;color:var(--muted);margin-top:2px}
+html.M .today{background:var(--dark);color:#fff;border-radius:26px;padding:20px;position:relative;overflow:hidden;display:flex;flex-direction:column;gap:14px}
+html.M .today::after{content:"";position:absolute;right:-60px;top:-60px;width:200px;height:200px;border-radius:50%;background:conic-gradient(from 30deg,#B9A9F8,#E9A6D3,#C9B8FF,#F2B6DA,#B9A9F8);opacity:.55;-webkit-mask:radial-gradient(circle,transparent 30%,#000 31%);mask:radial-gradient(circle,transparent 30%,#000 31%)}
+html.M .today .k{font-size:12px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--dark-ink);position:relative}
+html.M .today .big{font-size:52px;font-weight:800;letter-spacing:-2px;line-height:1;position:relative}
+html.M .today .big small{font-size:18px;letter-spacing:0;margin-left:6px;font-weight:700}
+html.M .today .what{font-size:15px;font-weight:600;position:relative;max-width:30ch}
+html.M .today .acts{display:flex;gap:8px;flex-wrap:wrap;position:relative}
+html.M .bw{display:inline-flex;align-items:center;gap:7px;border:0;background:#fff;color:var(--ink);font-weight:700;font-size:13px;padding:9px 14px;border-radius:999px;cursor:pointer;text-decoration:none}
+html.M .bw svg{width:15px;height:15px}
+html.M .bd{display:inline-flex;align-items:center;gap:7px;border:0;background:var(--dark-2);color:#fff;font-weight:700;font-size:13px;padding:9px 14px;border-radius:999px;cursor:pointer}
+html.M .car{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 calc(-1 * max(16px,env(safe-area-inset-right,0px))) 0 calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding:2px max(16px,env(safe-area-inset-left,0px));scrollbar-width:none}
+html.M .car::-webkit-scrollbar{display:none}
+html.M .st{flex:0 0 72%;max-width:260px;scroll-snap-align:start;background:var(--card);border-radius:22px;padding:16px;display:flex;flex-direction:column;gap:6px}
+html.M .st .l{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600}
+html.M .ic{width:30px;height:30px;border-radius:50%;background:var(--soft);display:grid;place-items:center;flex:none}
+html.M .ic svg{width:15px;height:15px}
+html.M .st .v{font-size:30px;font-weight:800;letter-spacing:-1px;line-height:1.1}
+html.M .st .v.red{color:var(--red)}
+html.M .st .s{font-size:12px;color:var(--muted)}
+html.M .sec{display:flex;flex-direction:column;gap:10px}
+html.M .sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:0 2px}
+html.M .sec-h h2{font-size:18px;font-weight:800;letter-spacing:-.3px}
+html.M .sec-h button{border:0;background:none;color:var(--lav-ink);font-weight:700;font-size:13px;cursor:pointer;padding:4px 0}
+html.M .list{background:var(--card);border-radius:22px;padding:6px}
+html.M .it{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center;width:100%;border:0;background:transparent;text-align:left;padding:12px;border-radius:16px;cursor:pointer}
+html.M .it+.it{border-top:1px solid var(--line);border-radius:0}
+html.M .it:active{background:var(--soft)}
+html.M .it .t{font-weight:700;font-size:15px;line-height:1.3}
+html.M .it .m{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px;font-size:12px;color:var(--muted)}
+html.M .days{font-size:26px;font-weight:800;letter-spacing:-.8px;color:var(--red);text-align:right;line-height:1;white-space:nowrap}
+html.M .days small{display:block;font-size:11px;font-weight:700;letter-spacing:0;margin-top:2px}
+html.M .chip{display:inline-block;font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap}
+html.M .c-red{background:var(--red-bg);color:var(--red)}
+html.M .c-amber{background:var(--amber-bg);color:var(--amber)}
+html.M .c-green{background:var(--green-bg);color:var(--green)}
+html.M .c-blue{background:var(--blue-bg);color:var(--blue)}
+html.M .c-lav{background:var(--lav);color:var(--lav-ink)}
+html.M .c-grey{background:var(--soft);color:var(--muted)}
+html.M .arrow{color:var(--muted)}
+html.M .arrow svg{width:18px;height:18px}
+html.M .empty{color:var(--muted);font-size:14px;padding:14px}
+html.M .seg{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding:2px}
+html.M .seg::-webkit-scrollbar{display:none}
+html.M .seg button{flex:none;border:0;background:var(--card);padding:8px 14px;border-radius:999px;font-weight:700;font-size:13px;color:var(--muted);cursor:pointer}
+html.M .seg button[aria-pressed="true"]{background:var(--dark);color:#fff}
+html.M .seg button .n{margin-left:6px;opacity:.7}
+html.M .tl{background:var(--card);border-radius:22px;padding:8px 16px}
+html.M .ev{display:grid;grid-template-columns:54px 14px minmax(0,1fr);gap:10px;padding:12px 0;position:relative}
+html.M .ev .d{font-weight:800;font-size:14px;line-height:1.2}
+html.M .ev .d span{display:block;font-size:11px;font-weight:600;color:var(--muted);text-transform:capitalize}
+html.M .ev .rail{position:relative;display:flex;justify-content:center}
+html.M .ev .rail::before{content:"";position:absolute;top:-12px;bottom:-12px;width:2px;background:var(--line)}
+html.M .ev:first-child .rail::before{top:8px}
+html.M .ev:last-child .rail::before{bottom:calc(100% - 8px)}
+html.M .ev .dot{width:12px;height:12px;border-radius:50%;background:var(--lav-2);position:relative;margin-top:3px;border:2px solid var(--card)}
+html.M .ev .dot.dep{background:var(--red)}
+html.M .ev .dot.frz{background:var(--card);border:2px solid var(--muted)}
+html.M .ev .dot.web{background:var(--pink)}
+html.M .ev .e .t{font-weight:700;font-size:14px;line-height:1.3}
+html.M .ev .e .x{font-size:12px;color:var(--muted)}
+html.M .card{background:var(--card);border-radius:22px;padding:16px;display:flex;flex-direction:column;gap:8px}
+html.M .card .k{font-size:12px;font-weight:800;color:var(--lav-ink);letter-spacing:.6px}
+html.M .card h3{font-size:16px;font-weight:800}
+html.M .card p{color:var(--muted);font-size:14px}
+html.M .kv{display:grid;grid-template-columns:110px minmax(0,1fr);gap:8px 12px;font-size:14px}
+html.M .kv dt{font-weight:700}
+html.M .kv dd{margin:0;color:var(--muted)}
+html.M .foot{font-size:12px;color:var(--muted);text-align:center;padding:4px 8px}
+html.M .foot a{color:var(--muted)}
+html.M .tabs{position:fixed;left:0;right:0;bottom:0;z-index:10;padding:0 max(12px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));pointer-events:none}
+html.M .tabs nav{pointer-events:auto;max-width:456px;margin:0 auto;background:var(--dark);border-radius:28px;display:grid;grid-template-columns:repeat(5,1fr);padding:8px}
+html.M .tab{border:0;background:transparent;color:var(--dark-ink);display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 4px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer}
+html.M .tab svg{width:21px;height:21px}
+html.M .tab[aria-current="page"]{background:var(--lav);color:var(--ink)}
+html.M .scrim{position:fixed;inset:0;background:rgba(17,17,22,.4);z-index:30}
+html.M .sheet{position:fixed;z-index:31;left:0;right:0;bottom:0;max-width:480px;margin:0 auto;background:var(--card);border-radius:26px 26px 0 0;padding:10px max(20px,env(safe-area-inset-right,0px)) calc(22px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));max-height:86vh;overflow:auto;display:flex;flex-direction:column;gap:14px}
+@media (prefers-reduced-motion:no-preference){html.M .sheet{animation:up .25s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:.5}to{transform:none;opacity:1}}}
+html.M .grab{width:42px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 4px}
+html.M .sheet h2{font-size:21px;font-weight:800;letter-spacing:-.4px;line-height:1.25}
+html.M .sheet .en{font-size:12px;color:var(--muted);margin-top:4px}
+html.M .sheet .acts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+html.M .sheet .acts .bd,html.M .sheet .acts .bw{justify-content:center;padding:12px}
+html.M .sheet .bw{border:1px solid var(--line)}
+html.M .toast{position:fixed;left:50%;bottom:calc(100px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--dark);color:#fff;font-weight:700;font-size:13px;padding:10px 16px;border-radius:999px;z-index:40;white-space:nowrap}
+html.M .offscreen{position:absolute;left:-9999px;top:0;width:1px;height:1px}
+/* ===== Estado en vivo (compartido por ambas vistas) ===== */
+html body .es-banner{display:flex;align-items:center;gap:12px;width:100%;border:0;text-align:left;cursor:pointer;border-radius:18px;padding:12px 16px;font:inherit;background:var(--es-bg);color:var(--es-ink)}
+.es-banner .es-dot{width:12px;height:12px;border-radius:50%;background:currentColor;flex:none;box-shadow:0 0 0 4px var(--es-ring)}
+.es-banner .es-txt{flex:1;min-width:0}
+.es-banner b{display:block;font-size:14px;font-weight:800;line-height:1.3}
+.es-banner span{display:block;font-size:12px;opacity:.85}
+.es-banner .es-go{font-size:12px;font-weight:700;white-space:nowrap;opacity:.9}
+.es-ok{--es-bg:var(--green-bg);--es-ink:var(--green);--es-ring:rgba(30,138,90,.18)}
+.es-aviso{--es-bg:var(--amber-bg);--es-ink:var(--amber);--es-ring:rgba(180,98,14,.18)}
+.es-degradado{--es-bg:var(--amber-bg);--es-ink:var(--amber);--es-ring:rgba(180,98,14,.25)}
+.es-caida{--es-bg:var(--red);--es-ink:#fff;--es-ring:rgba(255,255,255,.35)}
+.es-sin_dato,.es-viejo{--es-bg:var(--es-grey-bg);--es-ink:var(--muted);--es-ring:rgba(108,106,120,.18)}
+@media (prefers-reduced-motion:no-preference){.es-caida .es-dot,.es-degradado .es-dot{animation:es-pulse 1.4s ease-in-out infinite}@keyframes es-pulse{50%{box-shadow:0 0 0 9px transparent}}}
+
+.es{display:flex;flex-direction:column;gap:16px}
+.es-hero{border-radius:24px;padding:20px 22px;display:flex;flex-direction:column;gap:10px;background:var(--es-bg);color:var(--es-ink)}
+.es-hero .es-k{font-size:12px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;opacity:.85}
+.es-hero h2{font-size:30px;font-weight:800;letter-spacing:-.8px;line-height:1.1;text-wrap:balance;margin:0}
+.es-hero p{font-size:14px;margin:0;max-width:62ch}
+.es-hero .es-meta{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;font-weight:600;opacity:.9}
+.es-sec{display:flex;flex-direction:column;gap:10px}
+.es-sec h3{font-size:16px;font-weight:800;margin:0;padding:0 2px}
+.es-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.es-card{background:var(--card);border-radius:20px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.es-card .es-h{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.es-card .es-h b{font-size:15px;font-weight:800}
+.es-card .es-h small{font-size:12px;color:var(--muted);font-weight:600}
+.es-svc{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:10px 0;border-top:1px solid var(--line)}
+.es-svc:first-of-type{border-top:0}
+.es-svc .es-n{font-weight:700;font-size:14px}
+.es-svc .es-x{grid-column:1/-1;font-size:12px;color:var(--muted)}
+.es-svc a{font-size:12px;font-weight:700}
+.es-chip{display:inline-block;font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;white-space:nowrap;align-self:start;background:var(--es-bg);color:var(--es-ink)}
+.es-inc{display:flex;flex-direction:column;gap:2px;padding:10px 0;border-top:1px solid var(--line)}
+.es-inc:first-of-type{border-top:0}
+.es-inc b{font-size:14px}
+.es-inc span{font-size:12px;color:var(--muted)}
+.es-empty{color:var(--muted);font-size:13px;padding:4px 0}
+.es-hist{display:flex;gap:3px;align-items:flex-end;height:34px}
+.es-hist i{flex:1;min-width:3px;max-width:16px;border-radius:3px;height:100%;background:var(--es-ink);opacity:.85}
+.es-hist i.es-ok{background:var(--green);opacity:.35}.es-hist i.es-caida{background:var(--red);opacity:1}.es-hist i.es-degradado,.es-hist i.es-aviso,.es-hist i.es-mant{background:var(--amber)}.es-hist i.es-sin_dato{background:var(--muted);opacity:.4}
+.es-hist-l{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.es-links{display:flex;flex-wrap:wrap;gap:8px}
+.es-links a{display:inline-flex;align-items:center;gap:6px;background:var(--card);border-radius:999px;padding:8px 13px;font-size:13px;font-weight:700;text-decoration:none;color:var(--ink);border:1px solid var(--line)}
+.es-note{font-size:12px;color:var(--muted);max-width:70ch}
+.mode-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:12px;font-weight:700;padding:6px 12px;border-radius:999px;cursor:pointer}
+
 </style>
-</head>
-<body>
-<div class="wrap">
-  <header class="top">
-    <div><h1>Vigía de Continuidad</h1><p>Genesys Cloud, AWS y Microsoft · regiones use1 y sae1</p></div>
-    <button class="btn" id="recargar" type="button">Actualizar</button>
-  </header>
-  <section class="hero sin_dato" id="hero" aria-live="polite">
-    <div class="k"><span class="dot"></span><span id="h-k">Cargando…</span></div>
-    <h2 id="h-t">Leyendo el último estado</h2>
-    <p id="h-d"></p>
-    <div class="meta" id="h-m"></div>
-  </section>
-  <div class="grid" id="regiones"></div>
-  <div class="grid">
-    <section class="card"><h3>Incidentes que nos afectan <small id="n-inc"></small></h3><div id="inc"></div></section>
-    <section class="card"><h3>Otras regiones <small>solo informativo</small></h3><div id="otros"></div></section>
-  </div>
-  <section class="card"><h3>Últimas 24 horas <small id="h-res"></small></h3><div class="hist" id="hist"></div><div class="hist-l"><span id="h-ini"></span><span>ahora</span></div></section>
-  <nav class="links" aria-label="Páginas oficiales">
-    <a href="https://status.mypurecloud.com/" target="_blank" rel="noopener">Genesys Cloud ↗</a>
-    <a href="https://health.aws.amazon.com/health/status" target="_blank" rel="noopener">AWS Health ↗</a>
-    <a href="https://azure.status.microsoft/" target="_blank" rel="noopener">Azure ↗</a>
-    <a href="https://status.cloud.microsoft/" target="_blank" rel="noopener">Microsoft 365 ↗</a>
+
+<div id="W-root">
+<div class="app">
+  <nav class="rail" aria-label="Vistas" id="rail">
+    <div class="logo" aria-hidden="true">e/</div>
   </nav>
-  <p class="foot">Se revisa cada 5 minutos con GitHub Actions y esta página se refresca sola cada minuto. Fuentes: páginas de estado públicas de cada proveedor.</p>
+  <main class="frame" id="main"></main>
 </div>
+
+<div class="scrim" id="scrim" hidden></div>
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="m-t" hidden>
+  <div><div id="m-chip"></div><h2 id="m-t" style="margin-top:8px"></h2><p class="en" id="m-en"></p></div>
+  <dl id="m-dl"></dl>
+  <div class="acts">
+    <button class="btn-dark" type="button" id="m-copy">Copiar aviso</button>
+    <a class="btn-ghost" id="m-link" href="#" target="_blank" rel="noopener">Ver anuncio ↗</a>
+    <button class="btn-ghost" type="button" id="m-close">Cerrar</button>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+<textarea class="offscreen" id="clip" aria-hidden="true" tabindex="-1"></textarea>
+</div>
+<div id="M-root" hidden>
+<div class="phone" id="app"></div>
+<div class="tabs"><nav id="tabs" aria-label="Secciones"></nav></div>
+<div class="scrim" id="mscrim" hidden></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="s-t" hidden>
+  <div class="grab" aria-hidden="true"></div>
+  <div><div id="s-chip"></div><h2 id="s-t" style="margin-top:8px"></h2><p class="en" id="s-en"></p></div>
+  <dl class="kv" id="s-kv"></dl>
+  <div class="acts"><button class="bd" type="button" id="s-copy">Copiar aviso</button><a class="bw" id="s-link" href="#" target="_blank" rel="noopener">Ver anuncio ↗</a></div>
+  <button class="bw" type="button" id="s-close" style="justify-content:center">Cerrar</button>
+</div>
+<div class="toast" id="mtoast" role="status" hidden></div>
+<textarea class="offscreen" id="mclip" aria-hidden="true" tabindex="-1"></textarea>
+</div>
+
 <script>
 (function(){
-var TXT={ok:'Operativo',mant:'Mantención',aviso:'Aviso',degradado:'Degradado',caida:'Caída',sin_dato:'Sin datos',viejo:'Sin actualizar'};
-var COLOR={ok:'#1E8A5A',mant:'#3E57C9',aviso:'#B4620E',degradado:'#B4620E',caida:'#D93A3F',sin_dato:'#8A8896',viejo:'#8A8896'};
-var VIEJO_MIN=20;
-var REG={use1:'Americas (US East) · N. Virginia',sae1:'Americas (São Paulo)',global:'Global'};
-function $(id){return document.getElementById(id)}
-function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
-function hora(iso){if(!iso)return '';var d=new Date(iso);if(isNaN(d))return '';
-  return d.toLocaleString('es-CL',{timeZone:'America/Santiago',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}
-function hace(iso){var m=Math.round((Date.now()-new Date(iso))/60000);if(isNaN(m))return '';if(m<1)return 'hace instantes';if(m<60)return 'hace '+m+' min';var h=Math.floor(m/60);return 'hace '+h+' h '+(m%60)+' min'}
-function chip(e){return '<span class="chip '+esc(e)+'">'+esc(TXT[e]||e)+'</span>'}
-function incHtml(i){
-  var b=[esc(i.fuente),esc(i.region),esc(i.estado)];
-  if(i.desde)b.push('desde '+esc(hora(i.desde)));
-  if(i.act)b.push('act. '+esc(hora(i.act)));
-  return '<div class="inc"><b>'+(i.url?'<a href="'+esc(i.url)+'" target="_blank" rel="noopener">'+esc(i.t)+'</a>':esc(i.t))+'</b><span>'+b.filter(Boolean).join(' · ')+'</span></div>'}
-function pintar(d){
-  var edad=(Date.now()-new Date(d.revisado))/60000, viejo=!(edad<VIEJO_MIN), nivel=viejo?'viejo':(d.nivel||'sin_dato');
-  $('hero').className='hero '+nivel;
-  $('h-k').textContent=TXT[nivel]||nivel;
-  $('h-t').textContent=viejo?'El vigía no se actualiza desde '+hora(d.revisado):d.titular;
-  $('h-d').textContent=viejo?'Revisa la pestaña Actions del repositorio: puede que GitHub haya pausado la tarea programada. Último estado conocido: '+(d.titular||''):(d.detalle||'');
-  $('h-m').innerHTML='<span>Revisado '+esc(hora(d.revisado))+' (hora Chile) · '+esc(hace(d.revisado))+'</span>'+(d.ultimo_aviso?'<span>Último aviso a Telegram: '+esc(hora(d.ultimo_aviso))+'</span>':'');
-  document.title=(nivel==='ok'?'':'['+(TXT[nivel]||nivel)+'] ')+'Vigía de Continuidad';
-  $('fav').href="data:image/svg+xml,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='12' fill='"+(COLOR[nivel]||'#888')+"'/></svg>");
-  var grupos={use1:[],sae1:[],global:[]};
-  (d.servicios||[]).forEach(function(s){(grupos[s.region]||grupos.global).push(s)});
-  $('regiones').innerHTML=['use1','sae1','global'].map(function(r){
-    var ss=grupos[r];if(!ss.length)return '';
-    return '<section class="card"><h3>'+esc(r==='global'?'Microsoft y telefonía':r)+' <small>'+esc(REG[r])+'</small></h3>'+ss.map(function(s){
-      return '<div class="svc"><b>'+(s.url?'<a href="'+esc(s.url)+'" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">'+esc(s.n)+'</a>':esc(s.n))+'</b>'+chip(s.estado)+'<span class="x">'+esc(s.nota)+'</span></div>'}).join('')+'</section>'}).join('');
-  var inc=d.incidentes||[], ot=d.otros||[];
-  $('n-inc').textContent=inc.length?inc.length+' abierto'+(inc.length>1?'s':''):'';
-  $('inc').innerHTML=inc.length?inc.map(incHtml).join(''):'<p class="empty">Ninguno abierto en use1, sae1 ni Azure/Entra.</p>';
-  $('otros').innerHTML=ot.length?ot.map(incHtml).join(''):'<p class="empty">Sin incidentes abiertos en otras regiones.</p>';
-  var h=d.historial||[];
-  $('hist').innerHTML=h.map(function(x){return '<i class="'+esc(x.nivel)+'" title="'+esc(hora(x.at)+' · '+(TXT[x.nivel]||x.nivel))+'"></i>'}).join('');
-  $('h-ini').textContent=h.length?hora(h[0].at):'';
-  var malos=h.filter(function(x){return x.nivel==='caida'||x.nivel==='degradado'}).length;
-  $('h-res').textContent=h.length+' revisiones · '+(malos?malos+' con problemas':'sin problemas');
+var TZ='America/Santiago';
+var AN='https://help.genesys.cloud/announcements/';
+var B=AN+'genesys-cloud/';
+var C='https://community.genesys.com/discussion/';
+var RN='https://help.genesys.cloud/release-notes/genesys-cloud/archive/2026/';
+var REVISADO='2026-10-26';
+var AUD={agente:'Agentes',sup:'Supervisores',admin:'Administradores',ti:'TI / Desarrollo'};
+var KIND={dep:'Deprecación',ui:'Interfaz',plat:'Plataforma',api:'API',rel:'Liberado'};
+
+/* ===== DATOS (la tarea diaria actualiza ITEMS, FREEZES, WEBINARS y REVISADO) =====
+   k: dep | ui | plat | api | rel · eff: fecha en que entra en vigor · ann: anunciado · rel: liberado
+   imp: Alto | Medio | Bajo | Menor | Sin dato · act: Acción requerida | Planificar | Informativo · vis: se nota en pantalla */
+var ITEMS=[
+{k:'dep',t:'Cifrados TLS antiguos en BYOC Cloud',en:'Deprecation: BYOC Cloud SIP TLS ciphers',s:'Genesys ya no acepta TLS_RSA_WITH_AES_256_CBC_SHA256 ni TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384. Una troncal configurada solo con esos cifrados deja de conectar.',do:'Confirmar que cada troncal BYOC tenga otro cifrado compatible.',area:'Telefonía',imp:'Alto',act:'Acción requerida',aud:['ti'],ann:'2025-03-24',eff:'2026-10-19',url:B+'deprecation-byoc-cloud-sip-tls-ciphers/'},
+{k:'dep',t:'Endpoint de entrada de Open Messaging',en:'Deprecation: Current Open Messaging Inbound Endpoint',s:'Se retira el endpoint actual de Open Messaging. Las integraciones deben usar el nuevo.',do:'Confirmar que las integraciones de Open Messaging ya migraron.',area:'Mensajería',imp:'Alto',act:'Acción requerida',aud:['ti'],ann:'2024-06-24',eff:'2026-11-02',url:B+'deprecation-current-open-messaging-inbound-endpoint/'},
+{k:'dep',t:'Hardware Genesys para BYOC-Premises',en:'Deprecation: BYOC-Premises – Genesys Hardware Solution',s:'Fin de la solución de hardware de Genesys para BYOC-Premises (primer aviso).',do:'Inventariar Edges de hardware Genesys y planificar su reemplazo.',area:'Telefonía',imp:'Alto',act:'Acción requerida',aud:['admin','ti'],ann:'2025-03-01',eff:'2026-12-01',url:B+'deprecation-byoc-premises-genesys-hardware-solution/'},
+{k:'dep',t:'Modelo de resúmenes con IA en CAC-1, SAE-1 y EUC-2',en:'Deprecation: Main model change for summarization in CAC-1, SAE-1, and EUC-2 regions',s:'Cambia el modelo que genera los resúmenes en estas regiones.',do:'Avisar a quienes usan resúmenes y revisar su calidad tras el cambio.',area:'IA',imp:'Medio',act:'Planificar',aud:['sup','agente'],ann:'2026-10-12',eff:'2027-01-12',url:B+'deprecation-main-model-change-for-summarization-in-cac-1-and-sae-1-regions/'},
+{k:'dep',t:'Login de Genesys dentro de un iframe',en:'Deprecation: Ability to embed the Genesys Cloud login web application within an iframe',s:'La página de inicio de sesión ya no podrá incrustarse en un iframe.',do:'Revisar portales que muestren el login embebido.',area:'Seguridad',imp:'Alto',act:'Acción requerida',aud:['ti'],ann:'2026-07-13',eff:'2027-02-04',url:B+'deprecation-ability-to-embed-the-genesys-cloud-login-web-application-within-an-iframe/'},
+{k:'dep',t:'Voces Google y Azure en Enhanced TTS',en:'Deprecation: Genesys Enhanced TTS – Google and Microsoft Azure voices',s:'Fin de vida de Google Standard y fin de soporte de voces Neural y Wavenet de Google y Azure.',do:'Revisar IVR y bots que usen esas voces y elegir reemplazo.',area:'Voz',imp:'Alto',act:'Acción requerida',aud:['ti','admin'],ann:'2025-04-14',eff:'2027-03-09',url:B+'deprecation-genesys-enhanced-tts-microsoft-azure-and-google-voices/'},
+{k:'dep',t:'Integraciones Nuance',en:'Deprecation: Nuance Recognizer as a Service, Nuance TTS, and Nuance Mix Bot',s:'Se retiran Nuance Recognizer, Nuance TTS y Nuance Mix Bot.',do:'Confirmar si algún flujo usa Nuance y planificar la migración.',area:'Voz',imp:'Sin dato',act:'Planificar',aud:['ti'],ann:'2024-11-04',eff:'2027-05-31',url:B+'deprecation-nuance-recognizer-as-a-service-nuance-tts-and-nuance-mix-bot/'},
+{k:'dep',t:'Hardware BYOC-Premises (anuncio actualizado)',en:'Deprecation: BYOC-Premises – Genesys Hardware Solution',s:'Segundo anuncio de la misma deprecación, con otra fecha.',do:'Inventariar Edges de hardware Genesys y planificar su reemplazo.',area:'Telefonía',imp:'Alto',act:'Acción requerida',aud:['admin','ti'],ann:'2026-07-20',eff:'2027-06-01',url:B+'deprecation-byoc-premises-genesys-hardware-solution-2/'},
+{k:'dep',t:'Integración Salesforce Open CTI',en:'Deprecation: Salesforce open CTI integration',s:'Se depreca la integración Open CTI con Salesforce.',area:'Integraciones',imp:'Medio',act:'Planificar',aud:['ti'],ann:'2026-03-23',eff:'2028-02-28',url:B+'deprecation-salesforce-open-cti-integration/'},
+{k:'dep',t:'APIs e interfaz de facturación y uso',en:'Deprecation: Billing and usage APIs and user interface',s:'Se reemplazan las APIs y la interfaz de facturación. Genesys aún no publica la fecha.',area:'Facturación',imp:'Medio',act:'Planificar',aud:['admin','ti'],ann:'2025-03-10',eff:null,url:B+'deprecation-billing-and-usage-apis-and-user-interface/'},
+
+{k:'ui',t:'Notificaciones unificadas',en:'Unified notifications experience in Genesys Cloud',s:'Cambia cómo se muestran las notificaciones a todos los usuarios, agentes incluidos.',do:'Avisar a supervisores y agentes antes de que llegue.',area:'Interfaz',imp:'Alto',act:'Informativo',vis:true,aud:['agente','sup','admin'],ann:'2026-06-29',url:B+'unified-notifications-experience-in-genesys-cloud/'},
+{k:'ui',t:'Acceso por división a roles',en:'Division-based role access for authorized organizations users and groups',s:'Los roles de usuarios y grupos de organizaciones autorizadas podrán limitarse por división.',do:'Revisar cómo se asignan hoy esos roles.',area:'Permisos',imp:'Medio',act:'Planificar',aud:['admin'],ann:'2026-10-19',url:AN},
+{k:'ui',t:'Fechas de vigencia en grupos de staffing',en:'Effective dates for staffing group assignments',s:'Las asignaciones a grupos de staffing de WFM tendrán fechas de vigencia.',area:'WFM',imp:'Alto',act:'Planificar',aud:['admin','sup'],ann:'2026-10-05',url:B+'effective-dates-for-staffing-group-assignments/'},
+{k:'ui',t:'Analítica propia de callbacks',en:'Callback-specific analytics and service level reporting',s:'Métricas y nivel de servicio específicos para callbacks.',do:'Revisar reportes y metas que incluyen callbacks.',area:'Reportes',imp:'Alto',act:'Planificar',vis:true,aud:['sup','admin'],ann:'2026-09-28',url:B+'callback-specific-analytics-and-service-level-reporting/'},
+{k:'ui',t:'Eventos de detección de anomalías',en:'Anomaly detection events for proactive insights',s:'Genesys generará eventos al detectar comportamientos anómalos.',area:'Reportes',imp:'Alto',act:'Informativo',aud:['sup'],ann:'2026-06-01',url:B+'anomaly-detection-events-for-proactive-insights/'},
+{k:'ui',t:'Cola obligatoria en llamadas salientes',en:'Require queue selection for outbound calls',s:'Se podrá exigir elegir cola al llamar y deshabilitar salientes sin cola.',do:'Definir si se activa y avisar a agentes de salida.',area:'Outbound',imp:'Medio',act:'Planificar',vis:true,aud:['admin','agente'],ann:'2026-06-22',url:B+'require-queue-selection-for-outbound-calls/'},
+{k:'ui',t:'Prompts de Architect por división',en:'Division-based access control for Architect user prompts',s:'Los prompts de usuario de Architect podrán asignarse a divisiones.',area:'Architect',imp:'Medio',act:'Planificar',aud:['admin'],ann:'2026-09-28',url:B+'division-based-access-control-for-architect-user-prompts/'},
+{k:'ui',t:'Exportes alineados al mes calendario',en:'Calendar-month alignment for detail exports',s:'Las exportaciones de detalle se alinean a meses calendario.',area:'Reportes',imp:'Medio',act:'Informativo',aud:['sup','admin'],ann:'2026-10-12',url:B+'calendar-month-alignment-for-detail-exports/'},
+{k:'ui',t:'Logs de red en On Demand Log Capture',en:'Network log capture for On Demand Log Capture',s:'La captura de logs a pedido incluirá logs de red.',area:'Soporte',imp:'Medio',act:'Informativo',aud:['admin','ti'],ann:'2026-10-12',url:B+'network-log-capture-for-on-demand-log-capture/'},
+{k:'ui',t:'Gemma 4 para resúmenes de Copilot',en:'Gemma 4 model for Agent Copilot summaries in regions without Haiku 4.5',s:'Los resúmenes usarán Gemma 4 en regiones sin Haiku 4.5.',area:'IA',imp:'Medio',act:'Planificar',aud:['admin','sup'],ann:'2026-08-31',url:B+'gemma-4-model-for-agent-copilot-summaries-in-regions-without-haiku-4-5/'},
+{k:'ui',t:'Content Search según licencia',en:'Content Search for CX2, CX2D, and Digital Upgrade 2 licenses',s:'Cambia la disponibilidad de Content Search para licencias CX2, CX2D y Digital Upgrade 2.',do:'Revisar licencias y uso de Content Search.',area:'Licencias',imp:'Bajo',act:'Acción requerida',aud:['admin'],ann:'2026-09-28',url:B+'content-search-for-cx2-cx2d-and-digital-upgrade-2-licenses/'},
+{k:'ui',t:'Límite de un año en evaluaciones',en:'One-year date range limit for Agent Evaluation Summary and Detail views',s:'Las vistas de evaluaciones permitirán consultar como máximo un año.',do:'Avisar a calidad y ajustar reportes largos.',area:'Calidad',imp:'Bajo',act:'Acción requerida',aud:['sup'],ann:'2026-09-07',url:B+'one-year-date-range-limit-for-agent-evaluation-summary-and-detail-views/'},
+{k:'ui',t:'Mejor contraste en navegación',en:'Improved color contrast for global navigation and presence indicators',s:'Cambian colores de la navegación y de los indicadores de presencia.',area:'Interfaz',imp:'Bajo',act:'Informativo',vis:true,aud:['agente','sup'],ann:'2026-08-24',url:B+'improved-color-contrast-for-global-navigation-and-presence-indicators/'},
+{k:'plat',t:'Permisos en APIs de analytics',en:'Permission enforcement for analytics async aggregate APIs',s:'Las APIs asíncronas de agregados de analytics exigirán sus permisos.',do:'Revisar permisos de los clientes OAuth de reportería.',area:'Analytics',imp:'Alto',act:'Acción requerida',aud:['ti'],ann:'2026-10-05',url:B+'permission-enforcement-for-analytics-async-aggregate-apis/'},
+{k:'plat',t:'Mantenimiento de red en los ASN',en:'Planned network maintenance for Genesys Cloud Autonomous System Numbers',s:'Mantenimiento planificado en los ASN de red de Genesys Cloud.',do:'Revisar con redes reglas o rutas que dependan de esos ASN.',area:'Red',imp:'Alto',act:'Planificar',aud:['ti'],ann:'2026-10-05',url:B+'planned-network-maintenance-for-genesys-cloud-autonomous-system-numbers/'},
+{k:'plat',t:'SDK móviles 3.0.0',en:'Mobile Messenger SDK 3.0.0 · Mobile Transport SDK 3.0.0',s:'Cambios de módulos, distribución y API en los SDK de mensajería móvil.',do:'Avisar al equipo de apps móviles si usan Mobile Messenger.',area:'Apps móviles',imp:'Medio',act:'Planificar',aud:['ti'],ann:'2026-10-12',eff:'2026-10-30',url:B+'mobile-messenger-sdk-version-3-0-0-module-consolidation-and-distribution-changes/'},
+{k:'plat',t:'Límites de uso justo en outbound',en:'Introducing outbound fair use limits and overage pricing',s:'Límites de uso justo para outbound y precio por exceso.',do:'Revisar el volumen de campañas frente a los nuevos límites.',area:'Outbound',imp:'Bajo',act:'Acción requerida',aud:['admin'],ann:'2026-04-20',url:B+'introducing-outbound-fair-use-limits-and-overage-pricing/'},
+
+{k:'rel',t:'Nueva interfaz de Gestión de usuarios',en:'User management and users page modernization',s:'Se rediseñó la página de usuarios y la pestaña «Atributos de la persona». No cambia la funcionalidad.',do:'Avisar a administradores y actualizar manuales con capturas.',area:'Permisos',imp:'Menor',act:'Informativo',vis:true,aud:['admin'],rel:'2026-10-19',url:B+'user-management-and-users-page-modernization/'},
+{k:'rel',t:'Explorador de archivos de Knowledge Fabric',en:'Knowledge Fabric file explorer',s:'Lista de solo lectura de documentos cargados con sus metadatos.',area:'Knowledge',imp:'Medio',act:'Informativo',aud:['admin'],rel:'2026-10-19',url:RN},
+{k:'rel',t:'Pedir estado fuera de cola',en:'Requesting Off Queue presence status',s:'Si el administrador lo habilita, un agente con interacciones activas puede pedir un estado de descanso o colación: sigue en cola pero no recibe nuevas interacciones ACD, y pasa al estado pedido al terminar sus interacciones y el trabajo posterior.',do:'Decidir si se habilita y avisar a agentes y supervisores (afecta adherencia y presencia).',area:'Presencia',imp:'Sin dato',act:'Planificar',vis:true,aud:['agente','sup','admin'],rel:'2026-10-19',url:'https://help.genesys.cloud/release-notes/genesys-cloud/october-19-2026/'},
+{k:'rel',t:'Ordenar workitems por atributos',en:'Sort workitems by custom attributes',s:'Los supervisores ordenan la lista por campos personalizados de número o fecha.',area:'Workitems',imp:'Menor',act:'Informativo',vis:true,aud:['sup'],rel:'2026-10-19',url:RN},
+{k:'rel',t:'«Respondido» cambia en workitems',en:'More accurate answered metrics in workitems analytics views',s:'«Respondido» pasa a ser «Intento de respuesta». La nueva «Respondido» cuenta solo los aceptados por un agente.',do:'Revisar reportes y metas que usen «Respondido».',area:'Reportes',imp:'Menor',act:'Planificar',vis:true,aud:['sup'],rel:'2026-10-12',url:RN},
+{k:'rel',t:'Resumen de correos con Agent Copilot',en:'Agent Copilot email summarization',s:'Resúmenes con IA de conversaciones de correo largas.',do:'Evaluar si se activa y capacitar a agentes de correo.',area:'IA',imp:'Medio',act:'Planificar',vis:true,aud:['agente'],rel:'2026-10-12',url:B+'427451/'},
+{k:'rel',t:'Transcripción de mensajes de voz',en:'Personal and group voicemail transcriptions',s:'Transcripción de buzones personales, grupales y de ACD, controlada por «Voicemail Transcriptions».',do:'Decidir si se habilita y avisar a los usuarios.',area:'Voz',imp:'Medio',act:'Planificar',vis:true,aud:['agente','admin'],rel:'2026-10-12',url:RN},
+{k:'rel',t:'Notas en intercambio de turnos',en:'Add notes to shift trade requests',s:'Los agentes agregan una nota al pedir un intercambio de turno.',area:'WFM',imp:'Menor',act:'Informativo',vis:true,aud:['agente','admin'],rel:'2026-10-12',url:RN},
+{k:'rel',t:'Reserva de agente en callbacks',en:'Agent reservation for customer-first callbacks',s:'Se puede reservar un agente antes de marcar el callback.',area:'Callbacks',imp:'Menor',act:'Planificar',aud:['admin'],rel:'2026-10-12',url:RN},
+
+{k:'api',t:'Retiro de la carga CSV de data tables',en:'Removal of Datatable CSV Upload Endpoint',s:'Se elimina el endpoint de importación CSV de data tables de Architect.',do:'Buscar scripts que carguen data tables por CSV.',area:'Architect',imp:'Sin dato',act:'Acción requerida',aud:['ti'],ann:'2026-09-07',eff:'2026-10-07',url:C+'removal-of-datatable-csv-upload-endpoint-post-apiv2flowsdatatablesdatatableidimportjobs'},
+{k:'api',t:'Credenciales de data actions de Salesforce',en:'Deprecation: Salesforce data action username and password credential type',s:'Las data actions de Salesforce deben dejar el tipo usuario y contraseña.',do:'Actualizar credenciales de las integraciones con Salesforce.',area:'Salesforce',imp:'Sin dato',act:'Acción requerida',aud:['ti'],ann:'2026-08-03',eff:'2026-10-07',url:C+'urgent-credential-update-required-for-salesforce-data-action-integrations'},
+{k:'api',t:'Divisiones en endpoints masivos de habilidades',en:'Division Enforcement on Bulk Endpoints for Routing Skills',s:'Los endpoints masivos de habilidades respetan divisiones.',area:'Enrutamiento',imp:'Sin dato',act:'Planificar',aud:['ti'],ann:'2026-09-18',eff:'2026-10-19',url:AN},
+{k:'api',t:'Permisos en APIs de detalle de analytics',en:'Security Update: Permission enforcement for analytics async job and detail APIs',s:'Las APIs de detalle y trabajos asíncronos exigen sus permisos.',do:'Revisar permisos de clientes OAuth de reportería.',area:'Analytics',imp:'Sin dato',act:'Acción requerida',aud:['ti'],ann:'2026-10-05',eff:'2026-10-05',url:C+'security-update-permission-enforcement-for-analytics-async-job-and-detail-apis'},
+{k:'api',t:'Flujos de workitems: límite por hora',en:'Work Automation – workitem.workitemflow.launch.per.hour',s:'El límite diario de lanzamientos se reemplaza por uno por hora.',area:'Workitems',imp:'Sin dato',act:'Planificar',aud:['ti'],ann:'2026-10-12',url:C+'work-automation-introducing-workitemworkitemflowlaunchperhour-and-deprecating-workitemworkitemflowlaunchperday'},
+{k:'api',t:'Deprecación de las APIs /mobiledevices',en:'Deprecation of /mobiledevices APIs',s:'Se deprecan las APIs /mobiledevices.',area:'Plataforma',imp:'Sin dato',act:'Planificar',aud:['ti'],ann:'2026-09-30',url:C+'deprecation-of-mobiledevices-apis'},
+{k:'api',t:'SAML por HTTP GET rechazado',en:'SAML responses delivered by HTTP GET will be rejected',s:'El SSO debe enviar la respuesta SAML por POST.',do:'Confirmar con identidad que el proveedor SSO usa POST.',area:'SSO',imp:'Sin dato',act:'Acción requerida',aud:['ti'],ann:'2026-09-04',eff:'2026-09-28',url:C+'saml-responses-delivered-by-http-get-will-be-rejected-at-the-assertion-consumer-service'},
+{k:'api',t:'Campo namespace en plantillas WhatsApp',en:'Deprecation of namespace Field in WhatsApp Messaging Template APIs',s:'Se depreca el campo namespace.',area:'WhatsApp',imp:'Sin dato',act:'Planificar',aud:['ti'],ann:'2026-09-01',url:C+'deprecation-of-namespace-field-in-whatsapp-messaging-template-apis'},
+{k:'api',t:'Retiro de Google Agent Assist',en:'Deprecation and Removal of Google Agent Assist Integration',s:'Se elimina la integración con Google Agent Assist.',area:'IA',imp:'Sin dato',act:'Acción requerida',aud:['ti'],ann:'2026-08-24',url:C+'deprecation-and-removal-of-google-agent-assist-integration'},
+{k:'api',t:'Retiro de la API Action Target',en:'Removal - Action Target API',s:'Predictive Engagement deja de soportar Chat v2 (incluido ACD Web Chat) y dejan de funcionar GET /api/v2/journey/actiontargets y /actiontargets/{id}.',do:'Quitar referencias a Chat v2 y a Action Target; usar Web Messaging.',area:'Predictive Engagement',imp:'Sin dato',act:'Acción requerida',aud:['ti'],ann:'2026-09-25',eff:'2026-10-26',url:C+'removal-action-target-api'},
+{k:'api',t:'Retiro del SDK de tracking v1 de Predictive Engagement',en:'Removal – Genesys Predictive Engagement Tracking SDK v1',s:'El snippet de tracking v1 deja de generar eventos web y se eliminan sus APIs de journey (beacons, clickstream, ping) y campos journeyEvents de Web Deployments.',do:'Migrar al tracking de usuario digital de Messenger (plugin journey del SDK de Messenger).',area:'Predictive Engagement',imp:'Sin dato',act:'Acción requerida',aud:['ti'],ann:'2026-09-25',eff:'2026-10-26',url:C+'removal-genesys-predictive-engagement-tracking-sdk-v1'}
+];
+var REGIONS=[
+ {id:'sae1',n:'São Paulo',tz:'America/Sao_Paulo',d:2},{id:'mxc1',n:'México',tz:'America/Mexico_City',d:3},
+ {id:'cac1',n:'Canadá',tz:'America/Toronto',d:3},{id:'use1',n:'N. Virginia',tz:'America/New_York',d:4},
+ {id:'usw2',n:'Oregón',tz:'America/Los_Angeles',d:5},{id:'euw1',n:'Irlanda',tz:'Europe/Dublin',d:3},
+ {id:'euw2',n:'Londres',tz:'Europe/London',d:4},{id:'euc1',n:'Fráncfort',tz:'Europe/Berlin',d:4},
+ {id:'apse2',n:'Sídney',tz:'Australia/Sydney',d:3},{id:'apne1',n:'Tokio',tz:'Asia/Tokyo',d:4}
+];
+var FREEZES=[{from:'2026-11-02',to:'2026-11-06',why:'Elecciones en EE. UU.'},{from:'2026-11-23',to:'2026-11-27',why:'Acción de Gracias'},{from:'2026-12-21',to:'2027-01-08',why:'Navidad y Año Nuevo'}];
+var WEBINARS=[
+ {at:'2026-10-27T01:00:00Z',n:'Change Management in AI Deployment',x:'Genesys · sesión 2 de 3'},
+ {at:'2026-11-17T01:00:00Z',n:'Making the Commercial Case for AI',x:'Genesys · sesión 3 de 3'},
+ {at:'2026-11-19T16:00:00Z',n:'Genesys Cloud Analytics API Overview',x:'Genesys Education · 60 min'}
+];
+
+/* ===== Estado en vivo: lo escribe el vigía cada hora en db (estado/actual) ===== */
+var EST=null,EST_OK=false,EST_SUBS=[];
+var NIV={ok:'Operativo',aviso:'Con avisos',mant:'Mantenimiento',degradado:'Degradado',caida:'Caída',sin_dato:'Sin datos'};
+var NIVH={ok:'Todo operativo',aviso:'Hay avisos',degradado:'Servicio degradado',caida:'Caída en curso',sin_dato:'Sin datos del vigía'};
+var EST_LINKS=[['Genesys Cloud','https://status.mypurecloud.com/'],['AWS Health','https://health.aws.amazon.com/health/status'],['Azure','https://azure.status.microsoft/'],['Microsoft 365','https://status.cloud.microsoft/']];
+function safeUrl(u){return typeof u==='string'&&/^https:\/\//.test(u)?u:null}
+function E(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
+function estAge(){if(!EST||!EST.revisado)return null;return Math.round((Date.now()-Date.parse(EST.revisado))/60000)}
+function estLevel(){if(!EST)return 'sin_dato';var a=estAge();if(a!=null&&a>(/minuto/.test(EST.intervalo||'')?20:150))return 'viejo';return EST.nivel||'sin_dato'}
+function ago(min){if(min==null)return '';if(min<1)return 'recién';if(min<60)return 'hace '+min+' min';var h=Math.round(min/60);if(h<48)return 'hace '+h+' h';return 'hace '+Math.round(h/24)+' días'}
+function chTime(iso){try{return new Intl.DateTimeFormat('es-CL',{timeZone:'America/Santiago',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(iso)).replace('.','')}catch(e){return iso}}
+function estChip(st){return E('span','es-chip es-'+(st==='mant'?'aviso':st||'sin_dato'),NIV[st]||'Sin datos')}
+function estHead(){
+  var lv=estLevel();
+  if(lv==='sin_dato')return {lv:lv,t:EST_OK?'El vigía aún no ha reportado':'Conectando con el vigía…',s:'Revisa los estados oficiales mientras tanto.'};
+  if(lv==='viejo')return {lv:lv,t:'El vigía no reporta '+ago(estAge()),s:'El último dato puede estar desactualizado. Revisa los estados oficiales.'};
+  return {lv:lv,t:EST.titular||NIVH[lv],s:'Revisado '+ago(estAge())+' · Genesys, AWS y Microsoft'};
 }
-function cargar(){
-  fetch('estado.json?t='+Date.now(),{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error(r.status);return r.json()})
-  .then(pintar).catch(function(){
-    $('hero').className='hero sin_dato';$('h-k').textContent='Sin conexión';
-    $('h-t').textContent='No se pudo leer estado.json';$('h-d').textContent='Se reintentará en un minuto.';})
+function estBanner(onOpen){
+  var h=estHead();var b=E('button','es-banner es-'+h.lv);b.type='button';b.setAttribute('aria-label','Estado: '+h.t+'. Ver detalle');
+  b.appendChild(E('span','es-dot'));var t=E('span','es-txt');t.appendChild(E('b',null,h.t));t.appendChild(E('span',null,h.s));b.appendChild(t);
+  b.appendChild(E('span','es-go','Ver estado →'));b.addEventListener('click',onOpen);return b;
 }
-$('recargar').addEventListener('click',cargar);
-cargar();setInterval(cargar,60000);
-document.addEventListener('visibilitychange',function(){if(!document.hidden)cargar()});
+function estSvc(s){
+  var r=E('div','es-svc');r.appendChild(E('span','es-n',s.n));r.appendChild(estChip(s.estado));
+  var x=E('span','es-x',s.nota||'');if(s.afectados&&s.afectados.length)x.textContent=(s.nota?s.nota+' · ':'')+'Afectado: '+s.afectados.join(', ');r.appendChild(x);
+  if(safeUrl(s.url)){var a=E('a',null,'Ver estado oficial ↗');a.href=safeUrl(s.url);a.target='_blank';a.rel='noopener';a.style.gridColumn='1/-1';r.appendChild(a)}
+  return r;
+}
+function estCard(title,sub,list){
+  var c=E('div','es-card');var h=E('div','es-h');h.appendChild(E('b',null,title));if(sub)h.appendChild(E('small',null,sub));c.appendChild(h);
+  if(!list.length)c.appendChild(E('p','es-empty','Sin servicios vigilados aquí.'));list.forEach(function(s){c.appendChild(estSvc(s))});return c;
+}
+function estIncs(title,list,empty){
+  var s=E('div','es-sec');s.appendChild(E('h3',null,title));var c=E('div','es-card');
+  if(!list||!list.length)c.appendChild(E('p','es-empty',empty));
+  (list||[]).forEach(function(i){var r=E('div','es-inc');r.appendChild(E('b',null,i.t));
+    r.appendChild(E('span',null,[i.fuente,i.region,i.estado,i.desde?'desde '+chTime(i.desde):'',i.act?'actualizado '+chTime(i.act):''].filter(Boolean).join(' · ')));
+    if(safeUrl(i.url)){var a=E('a',null,'Ver incidente ↗');a.href=safeUrl(i.url);a.target='_blank';a.rel='noopener';a.style.fontSize='12px';a.style.fontWeight='700';r.appendChild(a)}c.appendChild(r)});
+  s.appendChild(c);return s;
+}
+function estView(){
+  var v=E('div','es');var h=estHead();
+  var hero=E('div','es-hero es-'+h.lv);hero.appendChild(E('span','es-k','Estado en vivo · Lo primero que hay que mirar'));hero.appendChild(E('h2',null,h.t));
+  if(EST&&EST.detalle)hero.appendChild(E('p',null,EST.detalle));else hero.appendChild(E('p',null,h.s));
+  var m=E('div','es-meta');if(EST&&EST.revisado){m.appendChild(E('span',null,'Última revisión: '+chTime(EST.revisado)+' hora de Chile ('+ago(estAge())+')'))}
+  m.appendChild(E('span',null,'El vigía revisa '+((EST&&EST.intervalo)||'cada hora')+' y avisa si algo afecta use1 o sae1'));hero.appendChild(m);v.appendChild(hero);
+  var S=(EST&&EST.servicios)||[];
+  if(EST&&(EST.incidentes||[]).length)v.appendChild(estIncs('Incidentes que nos afectan',EST.incidentes,''));
+  var rs=E('div','es-sec');rs.appendChild(E('h3',null,'Nuestras regiones'));var g=E('div','es-grid');
+  g.appendChild(estCard('US East · use1','N. Virginia',S.filter(function(s){return s.region==='use1'})));
+  g.appendChild(estCard('São Paulo · sae1','Brasil',S.filter(function(s){return s.region==='sae1'})));
+  rs.appendChild(g);v.appendChild(rs);
+  var gs=E('div','es-sec');gs.appendChild(E('h3',null,'Dependencias globales'));var g2=E('div','es-grid');
+  var glob=S.filter(function(s){return s.region!=='use1'&&s.region!=='sae1'});
+  var grp={};glob.forEach(function(s){(grp[s.grupo]=grp[s.grupo]||[]).push(s)});
+  Object.keys(grp).forEach(function(k){g2.appendChild(estCard(k,null,grp[k]))});
+  if(!glob.length)g2.appendChild(estCard('Microsoft y telefonía',null,[]));gs.appendChild(g2);v.appendChild(gs);
+  if(EST&&!(EST.incidentes||[]).length)v.appendChild(estIncs('Incidentes que nos afectan',[],'Ninguno abierto en use1, sae1 ni en las dependencias vigiladas.'));
+  if(EST&&EST.eventos){var es=E('div','es-sec');es.appendChild(E('h3',null,'Eventos operacionales de nuestra organización'));var ec=E('div','es-card');
+    if(!EST.eventos.length)ec.appendChild(E('p','es-empty','Sin eventos en los últimos 10 días. Llegan desde la Operational Console por EventBridge.'));
+    EST.eventos.slice(0,10).forEach(function(x){var r=E('div','es-inc');r.appendChild(E('b',null,x.t));r.appendChild(E('span',null,[x.defid,x.entidad,x.region,x.ts?chTime(x.ts):''].filter(Boolean).join(' · ')));ec.appendChild(r)});
+    es.appendChild(ec);v.appendChild(es)}
+  v.appendChild(estIncs('En otras regiones',EST&&EST.otros,'Sin incidentes abiertos en otras regiones.'));
+  var hi=(EST&&EST.historial)||[];
+  if(hi.length){var hs=E('div','es-sec');hs.appendChild(E('h3',null,'Últimas revisiones'));var c=E('div','es-card');var bar=E('div','es-hist');
+    hi.slice(-48).forEach(function(x){var i=E('i','es-'+(x.nivel||'sin_dato'));i.title=chTime(x.at)+' · '+(NIV[x.nivel]||'Sin datos');bar.appendChild(i)});c.appendChild(bar);
+    var l=E('div','es-hist-l');l.appendChild(E('span',null,chTime(hi.slice(-48)[0].at)));l.appendChild(E('span',null,'ahora'));c.appendChild(l);hs.appendChild(c);v.appendChild(hs)}
+  var ls=E('div','es-sec');ls.appendChild(E('h3',null,'Estados oficiales'));var lk=E('div','es-links');
+  EST_LINKS.forEach(function(p){var a=E('a',null,p[0]+' ↗');a.href=p[1];a.target='_blank';a.rel='noopener';lk.appendChild(a)});ls.appendChild(lk);
+  ls.appendChild(E('p','es-note',EST&&/minuto/.test(EST.intervalo||'')?'Esta página se refresca sola cada minuto. El vigía revisa '+EST.intervalo+' y avisa por Telegram si algo afecta use1 o sae1. Vista simple: estado.html':'Esta página se actualiza sola cuando el vigía reporta (cada hora). Para enterarte al minuto, suscríbete por correo o SMS en status.mypurecloud.com y elige Americas (US East) y Americas (São Paulo).'));
+  v.appendChild(ls);return v;
+}
+function estSubscribe(fn){EST_SUBS.push(fn)}
+(function(){
+  /* GitHub: el vigía escribe estado.json cada 5 minutos; aquí se lee cada minuto */
+  function cargar(){
+    fetch('estado.json?t='+Date.now(),{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error(r.status);return r.json()})
+    .then(function(d){EST=d;EST_OK=true;EST_SUBS.forEach(function(f){f()})})
+    .catch(function(){EST_OK=true;EST_SUBS.forEach(function(f){f()})});
+  }
+  cargar();setInterval(cargar,60000);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)cargar()});
+})();
+(function(){var last=null;setInterval(function(){var l=estLevel();if(last!==null&&l!==last)EST_SUBS.forEach(function(f){f()});last=l},60000)})();
+
+/* ===== Modo: PC o celular según el ancho, con opción de forzarlo ===== */
+var MQ=window.matchMedia('(max-width:760px)');
+function autoMode(){return MQ.matches?'M':'W'}
+function prefMode(){try{return localStorage.getItem('cg-modo')}catch(e){return null}}
+function applyMode(){var m=prefMode()||autoMode();var r=document.documentElement;r.classList.toggle('W',m==='W');r.classList.toggle('M',m==='M');
+  document.getElementById('W-root').hidden=m!=='W';document.getElementById('M-root').hidden=m!=='M'}
+function setMode(m){try{if(m===autoMode())localStorage.removeItem('cg-modo');else localStorage.setItem('cg-modo',m)}catch(e){}applyMode();window.scrollTo(0,0)}
+applyMode();
+try{MQ.addEventListener('change',applyMode)}catch(e){try{MQ.addListener(applyMode)}catch(e2){}}
+
+var WEBV=(function(){
+
+/* ===== Íconos ===== */
+var IC={
+ shield:'<path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.4 7.5 9.5 4.3-1.1 7.5-4.9 7.5-9.5V6z"/><path d="M8.8 12.2l2.2 2.2 4.4-4.6"/>',
+ home:'<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+ alert:'<path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4"/><path d="M12 17h.01"/>',
+ next:'<circle cx="12" cy="12" r="9"/><path d="M9 15l6-6"/><path d="M10 9h5v5"/>',
+ check:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/>',
+ code:'<path d="M8 8l-4 4 4 4"/><path d="M16 8l4 4-4 4"/>',
+ cal:'<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/>',
+ mega:'<path d="M3 11v2a1 1 0 0 0 1 1h3l6 4V6L7 10H4a1 1 0 0 0-1 1z"/><path d="M17 9a4 4 0 0 1 0 6"/>',
+ pulse:'<path d="M3 12h4l3-8 4 16 3-8h4"/>',
+ clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+ snow:'<path d="M12 2v20M4 7l16 10M20 7 4 17"/>',
+ copy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
+ users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7"/><path d="M18 14.5a6.5 6.5 0 0 1 3.5 5.5"/>',
+ grid:'<rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/>'
+};
+function svg(name){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+IC[name]+'</svg>'}
+
+/* ===== Fechas ===== */
+function parts(t,tz){var o={};new Intl.DateTimeFormat('en-US',{timeZone:tz,hourCycle:'h23',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'}).formatToParts(new Date(t)).forEach(function(p){o[p.type]=p.value});return {y:+o.year,m:+o.month,d:+o.day,h:+o.hour,mi:+o.minute,s:+o.second}}
+function off(t,tz){var p=parts(t,tz);return Math.round((Date.UTC(p.y,p.m-1,p.d,p.h,p.mi,p.s)-Math.floor(t/1000)*1000)/60000)}
+function zoned(y,m,d,h,tz){var g=Date.UTC(y,m-1,d,h,0);return g-off(g-off(g,tz)*60000,tz)*60000}
+function isoIn(t,tz){var p=parts(t,tz);return p.y+'-'+String(p.m).padStart(2,'0')+'-'+String(p.d).padStart(2,'0')}
+function ms(iso){var a=iso.split('-');return Date.UTC(+a[0],a[1]-1,+a[2])}
+function isoUTC(v){var x=new Date(v);return x.getUTCFullYear()+'-'+String(x.getUTCMonth()+1).padStart(2,'0')+'-'+String(x.getUTCDate()).padStart(2,'0')}
+var TODAY,NOW;
+function diff(iso){return Math.round((ms(iso)-ms(TODAY))/864e5)}
+function fd(iso){return new Intl.DateTimeFormat('es-CL',{timeZone:'UTC',day:'numeric',month:'short'}).format(new Date(ms(iso))).replace('.','')}
+function fdy(iso){return new Intl.DateTimeFormat('es-CL',{timeZone:'UTC',day:'numeric',month:'short',year:'numeric'}).format(new Date(ms(iso))).replace('.','')}
+function fdl(iso){return new Intl.DateTimeFormat('es-CL',{timeZone:'UTC',day:'numeric',month:'long',year:'numeric'}).format(new Date(ms(iso)))}
+function fdt(t){return new Intl.DateTimeFormat('es-CL',{timeZone:TZ,day:'numeric',month:'short'}).format(new Date(t)).replace('.','')}
+function ftm(t){return new Intl.DateTimeFormat('es-CL',{timeZone:TZ,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(t))}
+function rel(d){return d===0?'hoy':d===1?'mañana':d===-1?'ayer':d>0?'en '+d+' días':'hace '+(-d)+' días'}
+function frz(iso){for(var i=0;i<FREEZES.length;i++)if(iso>=FREEZES[i].from&&iso<=FREEZES[i].to)return FREEZES[i];return null}
+function frange(f){return f.from.slice(0,7)===f.to.slice(0,7)?(+f.from.slice(8))+'–'+fd(f.to):fd(f.from)+' – '+fd(f.to)}
+
+/* ===== Estado ===== */
+var S={view:'inicio',aud:'all',region:'sae1'};
+try{S.region=localStorage.getItem('cg-region')||'sae1'}catch(e){}
+function region(){return REGIONS.filter(function(r){return r.id===S.region})[0]||REGIONS[0]}
+function audTxt(i){return i.aud.map(function(a){return AUD[a]}).join(', ')}
+
+function status(i){
+  if(i.k==='rel')return {key:'rel',lbl:'Liberado',c:'c-green',th:'th-green'};
+  if(!i.eff)return i.act==='Acción requerida'?{key:'act',lbl:'Acción',c:'c-amber',th:'th-amber'}:{key:'pend',lbl:i.k==='dep'?'Sin fecha':'Viene',c:'c-lav',th:i.k==='plat'?'th-blue':'th-lav'};
+  var d=diff(i.eff);
+  if(d<0)return {key:'past',lbl:d>=-7?'Vigente':'Ya ocurrió',c:d>=-7?'c-red':'c-grey',th:d>=-7?'th-red':'th-grey'};
+  if(d<=30)return {key:'urg',lbl:'Urgente',c:'c-red',th:'th-red'};
+  if(d<=90)return {key:'soon',lbl:'Pronto',c:'c-amber',th:'th-amber'};
+  return {key:'later',lbl:'Más adelante',c:'c-blue',th:'th-blue'};
+}
+function urgent(){return ITEMS.filter(function(i){if(!i.eff||i.k==='rel')return false;var d=diff(i.eff);if(d<-7||d>30)return false;return i.imp==='Alto'||i.imp==='Medio'||i.act==='Acción requerida'}).sort(function(a,b){return a.eff.localeCompare(b.eff)})}
+function month(){
+  var r=ITEMS.filter(function(i){
+    if(i.k==='rel')return diff(i.rel)>=-30&&(i.vis||i.imp==='Medio');
+    if((i.k==='ui'||i.k==='plat')&&!i.eff)return (i.imp==='Alto'&&(i.vis||diff(i.ann)>=-30))||diff(i.ann)>=-7||(i.act==='Acción requerida'&&i.imp!=='Bajo');
+    return false});
+  r.sort(function(a,b){var ra=a.k==='rel'?a.rel:a.ann,rb=b.k==='rel'?b.rel:b.ann;return rb.localeCompare(ra)});
+  return r.slice(0,6);
+}
+function nextRel(reg,days){
+  var out=[];var start=ms(isoIn(NOW,reg.tz));
+  for(var k=0;k<days;k++){var v=start+k*864e5;var x=new Date(v);if(x.getUTCDay()!==reg.d)continue;var iso=isoUTC(v);
+    var at=zoned(x.getUTCFullYear(),x.getUTCMonth()+1,x.getUTCDate(),1,reg.tz);if(at+20*3600e3<NOW)continue;out.push({iso:iso,at:at,f:frz(iso)})}
+  return out;
+}
+
+/* ===== DOM ===== */
+function el(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
+function ico(name,cls){var s=el('span',cls||'ico');s.innerHTML=svg(name);return s}
+var main=document.getElementById('main');
+
+var VIEWS=[
+ {id:'estado',n:'Estado en vivo',i:'shield'},{id:'inicio',n:'Inicio',i:'home'},{id:'deprecaciones',n:'Deprecaciones',i:'alert'},{id:'viene',n:'Lo que viene',i:'next'},
+ {id:'liberado',n:'Liberado',i:'check'},{id:'apis',n:'APIs',i:'code'},{id:'calendario',n:'Calendario',i:'cal'},{id:'avisar',n:'Cómo avisar',i:'mega'}
+];
+var rail=document.getElementById('rail');
+VIEWS.forEach(function(v){var b=el('button','nav-b');b.type='button';b.dataset.v=v.id;b.setAttribute('aria-label',v.n);b.innerHTML=svg(v.i);b.appendChild(el('span','tip',v.n));
+  b.addEventListener('click',function(){go(v.id)});rail.appendChild(b)});
+rail.appendChild(el('div','sp'));
+var mv=el('button','nav-b');mv.type='button';mv.setAttribute('aria-label','Ver como celular');mv.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/></svg>';mv.appendChild(el('span','tip','Ver como celular'));mv.addEventListener('click',function(){setMode('M')});rail.appendChild(mv);
+var st=el('a','nav-b');st.href='https://status.mypurecloud.com';st.target='_blank';st.rel='noopener';st.setAttribute('aria-label','Estado del servicio');st.innerHTML=svg('pulse');st.appendChild(el('span','tip','Estado del servicio ↗'));rail.appendChild(st);
+
+function go(v){S.view=v;S.aud='all';render();try{history.replaceState(null,'','#'+v)}catch(e){}window.scrollTo(0,0)}
+
+function viewHead(title,sub,seg){
+  var h=el('div','vh');var l=el('div');l.appendChild(el('h1',null,title));if(sub)l.appendChild(el('p',null,sub));h.appendChild(l);if(seg)h.appendChild(seg);return h;
+}
+function audSeg(onChange){
+  var s=el('div','seg');[['all','Todos'],['agente','Agentes'],['sup','Supervisores'],['admin','Admins'],['ti','TI']].forEach(function(o){
+    var b=el('button',null,o[1]);b.type='button';b.setAttribute('aria-pressed',String(S.aud===o[0]));b.addEventListener('click',function(){S.aud=o[0];onChange()});s.appendChild(b)});
+  return s;
+}
+function row(i,right,sub){
+  var b=el('button','r');b.type='button';var s=status(i);
+  var dot=el('span','chip '+s.c,s.lbl);b.appendChild(dot);
+  var m=el('div');m.appendChild(el('div','t',i.t));m.appendChild(el('div','s',sub));b.appendChild(m);
+  if(right)b.appendChild(right);b.addEventListener('click',function(){openM(i)});return b;
+}
+function stat(icon,label,value,sub,red){
+  var c=el('div','stat');var l=el('div','stat-l');l.appendChild(ico(icon));l.appendChild(el('span',null,label));c.appendChild(l);
+  c.appendChild(el('div','stat-v'+(red?' red':''),value));c.appendChild(el('div','stat-s',sub));return c;
+}
+
+/* ----- Inicio ----- */
+function vInicio(){
+  var v=el('section','view');
+  var hero=el('div','hero');var band=el('div','hero-band');band.appendChild(el('div','bloom'));hero.appendChild(band);
+  var hb=el('div','hero-body');var who=el('div','who');who.appendChild(el('div','avatar','DM'));
+  var wt=el('div');wt.appendChild(el('h1',null,'Diego Martínez Sánchez'));wt.appendChild(el('p',null,'Ingeniero de Continuidad Operacional · e-contact'));who.appendChild(wt);hb.appendChild(who);
+  var acts=el('div','hero-acts');
+  var rp=el('label','pill pill-green');rp.appendChild(document.createTextNode('Región'));var sel=el('select');sel.setAttribute('aria-label','Región de Genesys Cloud');
+  REGIONS.forEach(function(r){var o=el('option',null,r.id+' · '+r.n);o.value=r.id;sel.appendChild(o)});sel.value=region().id;
+  sel.addEventListener('change',function(){S.region=sel.value;try{localStorage.setItem('cg-region',S.region)}catch(e){}render()});rp.appendChild(sel);acts.appendChild(rp);
+  var cb=el('button','btn-dark');cb.type='button';cb.innerHTML=svg('copy');cb.appendChild(document.createTextNode('Copiar resumen del día'));cb.addEventListener('click',copySummary);acts.appendChild(cb);
+  hb.appendChild(acts);hero.appendChild(hb);v.appendChild(hero);
+
+  var g=el('div','g4');
+  var nAct=ITEMS.filter(function(i){return i.k!=='rel'&&i.act==='Acción requerida'&&(!i.eff||diff(i.eff)>=-7)}).length;
+  g.appendChild(stat('alert','Requieren acción',String(nAct),'cambios que piden revisar algo',nAct>0));
+  var R=region();var nr=nextRel(R,90);var first=nr.filter(function(x){return !x.f})[0];
+  if(first){var dd=diff(first.iso);g.appendChild(stat('cal','Próxima liberación',dd<=0?'Hoy':dd===1?'Mañana':dd+' días',fd(first.iso)+' · '+ftm(first.at)+' hora de Chile · '+R.id))}
+  var dep=ITEMS.filter(function(i){return i.k==='dep'&&i.eff&&diff(i.eff)>=0}).sort(function(a,b){return a.eff.localeCompare(b.eff)})[0];
+  if(dep){var d2=diff(dep.eff);g.appendChild(stat('clock','Próximo retiro',d2===0?'Hoy':d2+(d2===1?' día':' días'),dep.t,d2<=30))}
+  var fr=FREEZES.filter(function(f){return f.to>=TODAY})[0];
+  if(fr){var act=fr.from<=TODAY;g.appendChild(stat('snow',act?'Congelamiento activo':'Próximo congelamiento',act?'Hasta '+fd(fr.to):diff(fr.from)+' días',frange(fr)+' · '+fr.why))}
+  v.appendChild(g);
+
+  var r1=el('div','g2');
+  var cu=el('div','card');var hu=el('div','card-h');hu.appendChild(el('h2',null,'Urgente'));var U=urgent();hu.appendChild(el('span','aside',U.length+(U.length===1?' cambio':' cambios')));cu.appendChild(hu);
+  var lu=el('div','rows');if(!U.length)lu.appendChild(el('p','empty','Nada vence en los próximos 30 días.'));
+  U.forEach(function(i){var d=diff(i.eff);var rt;if(d<0){rt=el('span','s','desde '+fd(i.eff))}else{rt=el('span','days',String(d));rt.appendChild(el('small',null,d===1?'día':'días'))}
+    lu.appendChild(row(i,rt,fd(i.eff)+' · '+audTxt(i)))});
+  cu.appendChild(lu);r1.appendChild(cu);
+  r1.appendChild(chartCard());v.appendChild(r1);
+
+  var r2=el('div','g2');
+  var cm=el('div','card');var hm=el('div','card-h');hm.appendChild(el('h2',null,'Este mes'));hm.appendChild(el('span','aside','lo que la operación va a notar'));cm.appendChild(hm);
+  var lm=el('div','rows');var M=month();if(!M.length)lm.appendChild(el('p','empty','Sin cambios destacados este mes.'));
+  M.forEach(function(i){lm.appendChild(row(i,null,(i.k==='rel'?'Liberado el '+fd(i.rel):'Anunciado, sin fecha')+' · '+audTxt(i)))});
+  cm.appendChild(lm);r2.appendChild(cm);
+  r2.appendChild(calCard(6,true));v.appendChild(r2);
+  return v;
+}
+function chartCard(){
+  var c=el('div','card');var h=el('div','card-h');h.appendChild(el('h2',null,'Próximos retiros y cambios'));
+  var next=ITEMS.filter(function(i){return i.eff&&i.k!=='rel'&&i.eff>=TODAY&&(i.imp==='Alto'||i.imp==='Medio'||i.act==='Acción requerida')}).sort(function(a,b){return a.eff.localeCompare(b.eff)}).slice(0,6);
+  if(next.length){var d0=diff(next[0].eff);h.appendChild(el('span','big-r',d0+(d0===1?' día':' días')))}c.appendChild(h);
+  c.appendChild(el('p','empty','Mientras más alta la barra, más cerca está la fecha. Toca una barra para ver el detalle.'));
+  var bars=el('div','bars');var maxd=Math.max.apply(null,next.map(function(i){return diff(i.eff)}).concat([30]));
+  next.forEach(function(i,idx){var d=diff(i.eff);var b=el('button','bar'+(idx===0?' now':idx%2?' lav':''));b.type='button';b.style.border='0';b.style.background='transparent';b.style.cursor='pointer';b.style.padding='0';
+    var col=el('div','col');var f=el('div','fill');f.style.height=Math.max(12,100-d/maxd*88)+'%';col.appendChild(f);b.appendChild(col);
+    b.appendChild(el('span','m',fd(i.eff)));b.appendChild(el('span','tipv',d+'d'));
+    b.setAttribute('aria-label',i.t+': '+fdl(i.eff)+', '+rel(d));b.title=i.t;b.addEventListener('click',function(){openM(i)});bars.appendChild(b)});
+  if(!next.length)bars.appendChild(el('p','empty','Sin fechas próximas.'));
+  c.appendChild(bars);return c;
+}
+function calCard(limit,showWeb){
+  var c=el('div','card');var h=el('div','card-h');h.appendChild(el('h2',null,'Calendario'));h.appendChild(el('span','aside',region().id+' · hora de Chile'));c.appendChild(h);
+  var ev=[];nextRel(region(),60).forEach(function(r){if(!r.f)ev.push({k:r.iso,d:fd(r.iso),t:'Liberación',x:ftm(r.at),c:''})});
+  FREEZES.forEach(function(f){if(f.to>=TODAY&&diff(f.from)<=60)ev.push({k:f.from<TODAY?TODAY:f.from,d:frange(f),t:'Congelado',x:f.why,c:'frz'})});
+  ITEMS.forEach(function(i){if(i.eff&&i.k!=='rel'){var d=diff(i.eff);if(d>=0&&d<=60&&(i.imp==='Alto'||i.imp==='Medio'||i.act==='Acción requerida'))ev.push({k:i.eff,d:fd(i.eff),t:i.t,x:'',c:'dep'})}});
+  if(showWeb)WEBINARS.forEach(function(w){var t=Date.parse(w.at);if(t>NOW&&t-NOW<60*864e5)ev.push({k:isoIn(t,TZ),d:fdt(t),t:w.n,x:'webinar '+ftm(t),c:'web'})});
+  ev.sort(function(a,b){return a.k.localeCompare(b.k)});
+  var box=el('div');ev.slice(0,limit).forEach(function(e){var r=el('div','ev');r.appendChild(el('span','d',e.d));var t=el('div','e');t.appendChild(el('span','dot '+e.c));
+    var tt=el('span',null,e.t);tt.style.overflow='hidden';tt.style.textOverflow='ellipsis';tt.style.whiteSpace='nowrap';tt.style.minWidth='0';t.appendChild(tt);if(e.x)t.appendChild(el('span',null,e.x));r.appendChild(t);box.appendChild(r)});
+  c.appendChild(box);return c;
+}
+
+/* ----- Colecciones (deprecaciones, viene, liberado, apis) ----- */
+function tile(i){
+  var b=el('button','tile');b.type='button';var s=status(i);
+  var th=el('div','thumb '+s.th);th.appendChild(el('span','chip c-dark',s.lbl));
+  if(i.k==='rel'){th.appendChild(ico('check','')).style.display='contents'}
+  else if(i.eff){var d=diff(i.eff);if(d>=0){var n=el('span','num',String(d));n.appendChild(el('small',null,d===1?'día':'días'));th.appendChild(n)}else th.appendChild(el('span','word',fdy(i.eff)))}
+  else{var w=el('span');w.innerHTML=svg(i.k==='api'?'code':i.k==='dep'?'clock':'next');th.appendChild(w)}
+  b.appendChild(th);b.appendChild(el('div','t',i.t));
+  var s2=el('div','s');s2.appendChild(el('span',null,i.k==='rel'?fd(i.rel):i.eff?fdy(i.eff):'Sin fecha'));s2.appendChild(el('span',null,i.area||KIND[i.k]));b.appendChild(s2);
+  b.addEventListener('click',function(){openM(i)});return b;
+}
+function vColl(title,sub,items){
+  var v=el('section','view');
+  function redraw(){var nv=vColl(title,sub,items);main.replaceChild(nv,v)}
+  v.appendChild(viewHead(title,sub,audSeg(redraw)));
+  var shown=items.filter(function(i){return S.aud==='all'||i.aud.indexOf(S.aud)>=0});
+  var wrap=el('div','coll');var tl=el('div','tiles');if(!shown.length)tl.appendChild(el('p','empty','No hay cambios para este público.'));shown.forEach(function(i){tl.appendChild(tile(i))});wrap.appendChild(tl);
+  var side=el('div','card');var hh=el('div','card-h');hh.appendChild(el('h2',null,'Por público'));side.appendChild(hh);
+  var sd=el('div','side');[['all','Todos','grid'],['agente','Agentes','users'],['sup','Supervisores','users'],['admin','Administradores','users'],['ti','TI / Desarrollo','code']].forEach(function(o){
+    var n=o[0]==='all'?items.length:items.filter(function(i){return i.aud.indexOf(o[0])>=0}).length;
+    var b=el('button');b.type='button';b.setAttribute('aria-pressed',String(S.aud===o[0]));var sq=el('span','sq');sq.innerHTML=svg(o[2]);b.appendChild(sq);b.appendChild(el('span','lbl',o[1]));b.appendChild(el('span','n',String(n)));
+    b.addEventListener('click',function(){S.aud=o[0];redraw()});sd.appendChild(b)});
+  side.appendChild(sd);
+  var tot=el('div','total');var urg=shown.filter(function(i){var k=status(i).key;return k==='urg'||k==='act'}).length;tot.appendChild(el('b',null,String(urg)));tot.appendChild(el('span',null,urg===1?'urgente o con acción en esta vista':'urgentes o con acción en esta vista'));side.appendChild(tot);
+  wrap.appendChild(side);v.appendChild(wrap);return v;
+}
+function byDate(a,b){var pa=a.eff?(diff(a.eff)<0?2:0):1,pb=b.eff?(diff(b.eff)<0?2:0):1;if(pa!==pb)return pa-pb;if(a.eff&&b.eff)return pa===2?b.eff.localeCompare(a.eff):a.eff.localeCompare(b.eff);return (b.ann||'').localeCompare(a.ann||'')}
+var IMP={'Alto':0,'Medio':1,'Bajo':2,'Menor':2,'Sin dato':3};
+
+function vEstadoW(){var v=el('section','view');v.appendChild(viewHead('Estado en vivo','Genesys Cloud, AWS y Microsoft para nuestras regiones us-east-1 y sa-east-1.'));v.appendChild(estView());return v}
+
+/* ----- Calendario ----- */
+function vCal(){
+  var v=el('section','view');var R=region();
+  var sel=el('div','seg');REGIONS.slice(0,5).forEach(function(r){var b=el('button',null,r.id);b.type='button';b.setAttribute('aria-pressed',String(S.region===r.id));b.addEventListener('click',function(){S.region=r.id;try{localStorage.setItem('cg-region',r.id)}catch(e){}render()});sel.appendChild(b)});
+  v.appendChild(viewHead('Calendario','Genesys libera por región desde el martes a la 01:00 hora local y termina el viernes. '+R.n+' recibe los cambios los '+['domingo','lunes','martes','miércoles','jueves','viernes','sábado'][R.d]+'.',sel));
+  var g=el('div','g2');
+  var c1=el('div','card');var h1=el('div','card-h');h1.appendChild(el('h2',null,'Próximas liberaciones'));h1.appendChild(el('span','aside',R.id+' · hora de Chile'));c1.appendChild(h1);
+  nextRel(R,70).slice(0,8).forEach(function(r){var e=el('div','ev');e.appendChild(el('span','d',fd(r.iso)));var t=el('div','e');t.appendChild(el('span','dot'+(r.f?' frz':'')));t.appendChild(el('span',null,r.f?'Congelada':'Liberación'));t.appendChild(el('span',null,r.f?r.f.why:fdt(r.at)+' '+ftm(r.at)));e.appendChild(t);c1.appendChild(e)});
+  g.appendChild(c1);
+  var c2=el('div','card');var h2=el('div','card-h');h2.appendChild(el('h2',null,'Congelamientos'));c2.appendChild(h2);
+  FREEZES.forEach(function(f){var e=el('div','ev');e.appendChild(el('span','d',frange(f)));var t=el('div','e');var s=f.to<TODAY?'Terminó':f.from<=TODAY?'En curso':rel(diff(f.from));
+    t.appendChild(el('span','chip '+(f.to<TODAY?'c-grey':f.from<=TODAY?'c-red':'c-lav'),s));t.appendChild(el('span',null,f.why));e.appendChild(t);c2.appendChild(e)});
+  var h3=el('div','card-h');h3.style.marginTop='8px';h3.appendChild(el('h2',null,'Webinars'));c2.appendChild(h3);
+  WEBINARS.forEach(function(w){var t=Date.parse(w.at);var e=el('div','ev');if(t<NOW)e.style.opacity='.5';e.appendChild(el('span','d',fdt(t)));var x=el('div','e');x.appendChild(el('span','dot'));
+    var tt=el('span',null,w.n+' · '+ftm(t));x.appendChild(tt);e.appendChild(x);c2.appendChild(e)});
+  g.appendChild(c2);v.appendChild(g);
+  var c3=el('div','card');var h4=el('div','card-h');h4.appendChild(el('h2',null,'Día de liberación por región'));c3.appendChild(h4);
+  var tw=el('div','tbl-wrap');var tb=el('table');var hr=el('tr');hr.appendChild(el('th',null,'Día'));hr.appendChild(el('th',null,'Regiones'));tb.appendChild(hr);
+  [['Martes','apne2, apse1, aps1, sae1'],['Miércoles','afs1, ape1, apne3, apse3, euw3, apse2, cac1, euc2, euw1, mec1, mxc1'],['Jueves','use1, apne1, euc1, euw2'],['Viernes','usw2, fedramp-use2-core']].forEach(function(r){var tr=el('tr');tr.appendChild(el('td',null,r[0]));tr.appendChild(el('td',null,r[1]));tb.appendChild(tr)});
+  tw.appendChild(tb);c3.appendChild(tw);v.appendChild(c3);return v;
+}
+
+/* ----- Cómo avisar ----- */
+function vAvisar(){
+  var v=el('section','view');v.appendChild(viewHead('Cómo avisar','Cada cambio se comunica en tres momentos, separado por público. En cualquier cambio, «Copiar aviso» arma el texto con esta ficha.'));
+  var g=el('div','g4');g.style.gridTemplateColumns='repeat(auto-fit,minmax(220px,1fr))';
+  [['1','Cuando Genesys lo anuncia','Aviso «Lo que viene»: qué cambia, a quién afecta y si hay que preparar algo.'],['2','Cuando se libera','Confirmación con capturas la semana en que aparece en las notas de actualización.'],['3','Si es una deprecación','Recordatorios a 90, 30 y 7 días de la fecha, con la acción concreta.']].forEach(function(s){
+    var c=el('div','card step');c.appendChild(el('span','k','MOMENTO '+s[0]));c.appendChild(el('h3',null,s[1]));c.appendChild(el('p',null,s[2]));g.appendChild(c)});
+  v.appendChild(g);
+  var gg=el('div','g2');
+  var c=el('div','card');var h=el('div','card-h');h.appendChild(el('h2',null,'Canal por público'));c.appendChild(h);
+  var tw=el('div','tbl-wrap');var t=el('table');var hr=el('tr');['Público','Qué le interesa','Canal'].forEach(function(x){hr.appendChild(el('th',null,x))});t.appendChild(hr);
+  [['Agentes','Lo que cambia en su pantalla','Mensaje corto vía supervisores, con captura'],['Supervisores','Métricas, reportes y vistas','Correo o reunión semanal'],['Administradores','Configuración, permisos e interfaz','Boletín y reunión de operación'],['TI / Desarrollo','APIs, integraciones y telefonía','Correo directo con acción y fecha']].forEach(function(r){var tr=el('tr');r.forEach(function(x){tr.appendChild(el('td',null,x))});t.appendChild(tr)});
+  tw.appendChild(t);c.appendChild(tw);gg.appendChild(c);
+  var c2=el('div','card');var h2=el('div','card-h');h2.appendChild(el('h2',null,'Ficha del aviso'));c2.appendChild(h2);
+  c2.appendChild(el('div','tpl','Qué cambia: …\nA quién afecta: agentes / supervisores / administradores / TI\nCuándo: fecha, o «anunciado el X, sin fecha aún»\nQué hay que hacer: nada / revisar / acción antes del X\nMás info: enlace al anuncio'));
+  gg.appendChild(c2);v.appendChild(gg);return v;
+}
+
+/* ===== Render ===== */
+function render(){
+  NOW=Date.now();TODAY=isoIn(NOW,TZ);
+  Array.prototype.forEach.call(rail.querySelectorAll('button.nav-b'),function(b){if(b.dataset.v===S.view)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
+  var v;
+  if(S.view==='deprecaciones')v=vColl('Deprecaciones','Funcionalidades que Genesys retira, de la más próxima a la más lejana.',ITEMS.filter(function(i){return i.k==='dep'}).sort(byDate));
+  else if(S.view==='viene')v=vColl('Lo que viene','Cambios de interfaz y de plataforma anunciados que aún no llegan.',ITEMS.filter(function(i){return i.k==='ui'||i.k==='plat'}).sort(function(a,b){var x=(a.eff?0:1)-(b.eff?0:1);if(x)return x;var y=IMP[a.imp]-IMP[b.imp];return y||b.ann.localeCompare(a.ann)}));
+  else if(S.view==='liberado')v=vColl('Liberado','Novedades de las notas de actualización semanales.',ITEMS.filter(function(i){return i.k==='rel'}).sort(function(a,b){return b.rel.localeCompare(a.rel)||(a.vis?0:1)-(b.vis?0:1)}));
+  else if(S.view==='apis')v=vColl('APIs e integraciones','Retiros de endpoints, campos y permisos que pueden romper integraciones.',ITEMS.filter(function(i){return i.k==='api'}).sort(function(a,b){return (b.eff||b.ann).localeCompare(a.eff||a.ann)}));
+  else if(S.view==='estado')v=vEstadoW();
+  else if(S.view==='calendario')v=vCal();
+  else if(S.view==='avisar')v=vAvisar();
+  else{S.view='inicio';v=vInicio()}
+  main.textContent='';if(S.view!=='estado'){var bn=estBanner(function(){go('estado')});bn.style.marginBottom='18px';main.appendChild(bn)}main.appendChild(v);
+  var f=el('p','empty','Datos revisados el '+fdl(REVISADO)+' · Fuente: anuncios y notas de actualización de Genesys Cloud');f.style.marginTop='18px';main.appendChild(f);
+}
+
+/* ===== Modal, aviso y resumen ===== */
+var modal=document.getElementById('modal'),scrim=document.getElementById('scrim'),cur=null,lastF=null;
+function when(i){if(i.eff){var d=diff(i.eff);return fdl(i.eff)+' ('+rel(d)+')'}if(i.rel)return 'Liberado el '+fdl(i.rel);return (i.ann?'Anunciado el '+fdl(i.ann)+'; ':'')+'aún sin fecha'}
+function openM(i){
+  cur=i;lastF=document.activeElement;var s=status(i);
+  var ch=document.getElementById('m-chip');ch.textContent='';ch.appendChild(el('span','chip '+s.c,s.lbl+' · '+KIND[i.k]));
+  document.getElementById('m-t').textContent=i.t;document.getElementById('m-en').textContent=i.en;
+  var dl=document.getElementById('m-dl');dl.textContent='';
+  [['Qué cambia',i.s],['Cuándo',when(i)],['A quién afecta',audTxt(i)],['Impacto',i.imp||'Sin dato'],['Qué hacer',i.do||(i.act==='Acción requerida'?'Revisar si aplica y actuar antes de la fecha.':'Revisar con tiempo si afecta a la operación.')]].forEach(function(p){dl.appendChild(el('dt',null,p[0]));dl.appendChild(el('dd',null,p[1]))});
+  document.getElementById('m-link').href=i.url;modal.hidden=false;scrim.hidden=false;document.getElementById('m-copy').focus();
+}
+function closeM(){modal.hidden=true;scrim.hidden=true;if(lastF&&lastF.focus)lastF.focus()}
+document.getElementById('m-close').addEventListener('click',closeM);scrim.addEventListener('click',closeM);
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!modal.hidden)closeM()});
+var tt=null;function toast(m){var t=document.getElementById('toast');t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(function(){t.hidden=true},2600)}
+function copy(txt,ok){
+  function fb(){var c=document.getElementById('clip');c.value=txt;c.select();var done=false;try{done=document.execCommand('copy')}catch(e){}toast(done?ok:'No se pudo copiar automáticamente')}
+  try{navigator.clipboard.writeText(txt).then(function(){toast(ok)},fb)}catch(e){fb()}
+}
+document.getElementById('m-copy').addEventListener('click',function(){var i=cur;
+  copy(['Aviso Genesys Cloud: '+i.t,'','Qué cambia: '+i.s,'A quién afecta: '+audTxt(i),'Cuándo: '+when(i),'Qué hacer: '+(i.do||'Revisar si aplica.'),'Más info: '+i.url,'','Diego Martínez Sánchez','Ingeniero de Continuidad Operacional · e-contact'].join('\n'),'Aviso copiado')});
+function copySummary(){
+  var R=region();var L=['Continuidad Genesys Cloud · '+fdl(TODAY),''];
+  var U=urgent();L.push('Urgente:');if(!U.length)L.push('- Nada vence en los próximos 30 días');U.forEach(function(i){L.push('- '+i.t+': '+fd(i.eff)+' ('+rel(diff(i.eff))+')')});
+  L.push('','Este mes:');month().forEach(function(i){L.push('- '+i.t+(i.k==='rel'?' (liberado '+fd(i.rel)+')':' (anunciado, sin fecha)'))});
+  var first=nextRel(R,90).filter(function(x){return !x.f})[0];if(first)L.push('','Próxima liberación '+R.id+': '+fdl(first.iso)+', '+ftm(first.at)+' hora de Chile');
+  L.push('','Diego Martínez Sánchez · Continuidad Operacional · e-contact');copy(L.join('\n'),'Resumen copiado');
+}
+
+var h=(location.hash||'').slice(1);if(VIEWS.some(function(v){return v.id===h}))S.view=h;
+estSubscribe(render);
+render();
+setInterval(function(){if(isoIn(Date.now(),TZ)!==TODAY)render()},60000);
+return {go:go,view:function(){return S.view}};
+})();
+
+var MOBV=(function(){
+
+/* ===== Íconos ===== */
+var IC={
+ shield:'<path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.4 7.5 9.5 4.3-1.1 7.5-4.9 7.5-9.5V6z"/><path d="M8.8 12.2l2.2 2.2 4.4-4.6"/>',
+ home:'<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+ alert:'<path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4"/><path d="M12 17h.01"/>',
+ next:'<circle cx="12" cy="12" r="9"/><path d="M9 15l6-6"/><path d="M10 9h5v5"/>',
+ check:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/>',
+ code:'<path d="M8 8l-4 4 4 4"/><path d="M16 8l4 4-4 4"/>',
+ cal:'<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/>',
+ mega:'<path d="M3 11v2a1 1 0 0 0 1 1h3l6 4V6L7 10H4a1 1 0 0 0-1 1z"/><path d="M17 9a4 4 0 0 1 0 6"/>',
+ pulse:'<path d="M3 12h4l3-8 4 16 3-8h4"/>',
+ clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+ snow:'<path d="M12 2v20M4 7l16 10M20 7 4 17"/>',
+ copy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
+ users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7"/><path d="M18 14.5a6.5 6.5 0 0 1 3.5 5.5"/>',
+ grid:'<rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/>'
+};
+function svg(name){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+IC[name]+'</svg>'}
+
+/* ===== Fechas ===== */
+function parts(t,tz){var o={};new Intl.DateTimeFormat('en-US',{timeZone:tz,hourCycle:'h23',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'}).formatToParts(new Date(t)).forEach(function(p){o[p.type]=p.value});return {y:+o.year,m:+o.month,d:+o.day,h:+o.hour,mi:+o.minute,s:+o.second}}
+function off(t,tz){var p=parts(t,tz);return Math.round((Date.UTC(p.y,p.m-1,p.d,p.h,p.mi,p.s)-Math.floor(t/1000)*1000)/60000)}
+function zoned(y,m,d,h,tz){var g=Date.UTC(y,m-1,d,h,0);return g-off(g-off(g,tz)*60000,tz)*60000}
+function isoIn(t,tz){var p=parts(t,tz);return p.y+'-'+String(p.m).padStart(2,'0')+'-'+String(p.d).padStart(2,'0')}
+function ms(iso){var a=iso.split('-');return Date.UTC(+a[0],a[1]-1,+a[2])}
+function isoUTC(v){var x=new Date(v);return x.getUTCFullYear()+'-'+String(x.getUTCMonth()+1).padStart(2,'0')+'-'+String(x.getUTCDate()).padStart(2,'0')}
+var TODAY,NOW;
+function diff(iso){return Math.round((ms(iso)-ms(TODAY))/864e5)}
+function fd(iso){return new Intl.DateTimeFormat('es-CL',{timeZone:'UTC',day:'numeric',month:'short'}).format(new Date(ms(iso))).replace('.','')}
+function fdy(iso){return new Intl.DateTimeFormat('es-CL',{timeZone:'UTC',day:'numeric',month:'short',year:'numeric'}).format(new Date(ms(iso))).replace('.','')}
+function fdl(iso){return new Intl.DateTimeFormat('es-CL',{timeZone:'UTC',day:'numeric',month:'long',year:'numeric'}).format(new Date(ms(iso)))}
+function fdt(t){return new Intl.DateTimeFormat('es-CL',{timeZone:TZ,day:'numeric',month:'short'}).format(new Date(t)).replace('.','')}
+function ftm(t){return new Intl.DateTimeFormat('es-CL',{timeZone:TZ,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(t))}
+function rel(d){return d===0?'hoy':d===1?'mañana':d===-1?'ayer':d>0?'en '+d+' días':'hace '+(-d)+' días'}
+function frz(iso){for(var i=0;i<FREEZES.length;i++)if(iso>=FREEZES[i].from&&iso<=FREEZES[i].to)return FREEZES[i];return null}
+function frange(f){return f.from.slice(0,7)===f.to.slice(0,7)?(+f.from.slice(8))+'–'+fd(f.to):fd(f.from)+' – '+fd(f.to)}
+
+/* ===== Estado ===== */
+var S={view:'inicio',aud:'all',region:'sae1'};
+try{S.region=localStorage.getItem('cg-region')||'sae1'}catch(e){}
+function region(){return REGIONS.filter(function(r){return r.id===S.region})[0]||REGIONS[0]}
+function audTxt(i){return i.aud.map(function(a){return AUD[a]}).join(', ')}
+
+function status(i){
+  if(i.k==='rel')return {key:'rel',lbl:'Liberado',c:'c-green',th:'th-green'};
+  if(!i.eff)return i.act==='Acción requerida'?{key:'act',lbl:'Acción',c:'c-amber',th:'th-amber'}:{key:'pend',lbl:i.k==='dep'?'Sin fecha':'Viene',c:'c-lav',th:i.k==='plat'?'th-blue':'th-lav'};
+  var d=diff(i.eff);
+  if(d<0)return {key:'past',lbl:d>=-7?'Vigente':'Ya ocurrió',c:d>=-7?'c-red':'c-grey',th:d>=-7?'th-red':'th-grey'};
+  if(d<=30)return {key:'urg',lbl:'Urgente',c:'c-red',th:'th-red'};
+  if(d<=90)return {key:'soon',lbl:'Pronto',c:'c-amber',th:'th-amber'};
+  return {key:'later',lbl:'Más adelante',c:'c-blue',th:'th-blue'};
+}
+function urgent(){return ITEMS.filter(function(i){if(!i.eff||i.k==='rel')return false;var d=diff(i.eff);if(d<-7||d>30)return false;return i.imp==='Alto'||i.imp==='Medio'||i.act==='Acción requerida'}).sort(function(a,b){return a.eff.localeCompare(b.eff)})}
+function month(){
+  var r=ITEMS.filter(function(i){
+    if(i.k==='rel')return diff(i.rel)>=-30&&(i.vis||i.imp==='Medio');
+    if((i.k==='ui'||i.k==='plat')&&!i.eff)return (i.imp==='Alto'&&(i.vis||diff(i.ann)>=-30))||diff(i.ann)>=-7||(i.act==='Acción requerida'&&i.imp!=='Bajo');
+    return false});
+  r.sort(function(a,b){var ra=a.k==='rel'?a.rel:a.ann,rb=b.k==='rel'?b.rel:b.ann;return rb.localeCompare(ra)});
+  return r.slice(0,6);
+}
+function nextRel(reg,days){
+  var out=[];var start=ms(isoIn(NOW,reg.tz));
+  for(var k=0;k<days;k++){var v=start+k*864e5;var x=new Date(v);if(x.getUTCDay()!==reg.d)continue;var iso=isoUTC(v);
+    var at=zoned(x.getUTCFullYear(),x.getUTCMonth()+1,x.getUTCDate(),1,reg.tz);if(at+20*3600e3<NOW)continue;out.push({iso:iso,at:at,f:frz(iso)})}
+  return out;
+}
+
+function byDate(a,b){var pa=a.eff?(diff(a.eff)<0?2:0):1,pb=b.eff?(diff(b.eff)<0?2:0):1;if(pa!==pb)return pa-pb;if(a.eff&&b.eff)return pa===2?b.eff.localeCompare(a.eff):a.eff.localeCompare(b.eff);return (b.ann||'').localeCompare(a.ann||'')}
+var IMP={'Alto':0,'Medio':1,'Bajo':2,'Menor':2,'Sin dato':3};
+
+IC.chev='<path d="M9 6l6 6-6 6"/>';IC.list='<path d="M8 6h13M8 12h13M8 18h13"/><path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>';IC.monitor='<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>';
+
+function el(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e}
+function icon(name,cls){var s=el('span',cls||'ic');s.innerHTML=svg(name);return s}
+var app=document.getElementById('app');
+var M={tab:'hoy',seg:'dep'};
+var TABS=[{id:'estado',n:'Estado',i:'shield'},{id:'hoy',n:'Hoy',i:'home'},{id:'cambios',n:'Cambios',i:'list'},{id:'agenda',n:'Agenda',i:'cal'},{id:'avisar',n:'Avisar',i:'mega'}];
+var tabs=document.getElementById('tabs');
+TABS.forEach(function(t){var b=el('button','tab');b.type='button';b.dataset.t=t.id;b.innerHTML=svg(t.i);b.appendChild(el('span',null,t.n));b.addEventListener('click',function(){go(t.id)});tabs.appendChild(b)});
+function go(t,seg){M.tab=t;if(seg)M.seg=seg;render();window.scrollTo(0,0)}
+
+function item(i,showDays){
+  var b=el('button','it');b.type='button';var s=status(i);
+  var l=el('div');l.appendChild(el('div','t',i.t));var m=el('div','m');m.appendChild(el('span','chip '+s.c,s.lbl));
+  m.appendChild(el('span',null,i.k==='rel'?'Liberado '+fd(i.rel):i.eff?fd(i.eff):'Sin fecha'));m.appendChild(el('span',null,'· '+audTxt(i)));l.appendChild(m);b.appendChild(l);
+  if(showDays&&i.eff&&diff(i.eff)>=0){var d=diff(i.eff);var r=el('div','days',String(d));r.appendChild(el('small',null,d===1?'día':'días'));b.appendChild(r)}
+  else b.appendChild(icon('chev','arrow'));
+  b.addEventListener('click',function(){openS(i)});return b;
+}
+function secH(title,link,fn){var h=el('div','sec-h');h.appendChild(el('h2',null,title));if(link){var b=el('button',null,link);b.type='button';b.addEventListener('click',fn);h.appendChild(b)}return h}
+function regionPicker(){
+  var w=el('label','reg');var s=el('select');s.setAttribute('aria-label','Región de Genesys Cloud');
+  REGIONS.forEach(function(r){var o=el('option',null,r.id);o.value=r.id;s.appendChild(o)});s.value=region().id;
+  s.addEventListener('change',function(){S.region=s.value;try{localStorage.setItem('cg-region',S.region)}catch(e){}render()});w.appendChild(s);return w;
+}
+
+/* ----- Hoy ----- */
+function sHoy(){
+  var v=el('section','screen');
+  var hd=el('div','hd');hd.appendChild(el('div','av','DM'));var ht=el('div','hd-t');
+  var td=new Intl.DateTimeFormat('es-CL',{timeZone:TZ,weekday:'long',day:'numeric',month:'long'}).format(new Date(NOW));
+  ht.appendChild(el('p',null,td.charAt(0).toUpperCase()+td.slice(1)));ht.appendChild(el('h1',null,'Hola, Diego'));hd.appendChild(ht);hd.appendChild(regionPicker());v.appendChild(hd);
+
+  var U=urgent();var nxt=U.filter(function(i){return diff(i.eff)>=0})[0];
+  var t=el('div','today');t.appendChild(el('span','k','Lo más próximo'));
+  if(nxt){var d=diff(nxt.eff);var bg=el('div','big',d===0?'Hoy':String(d));if(d>0)bg.appendChild(el('small',null,d===1?'día':'días'));t.appendChild(bg);t.appendChild(el('p','what',nxt.t+' · '+fd(nxt.eff)))}
+  else{t.appendChild(el('div','big','0'));t.appendChild(el('p','what','Nada vence en los próximos 30 días'))}
+  var a=el('div','acts');var cb=el('button','bw');cb.type='button';cb.innerHTML=svg('copy');cb.appendChild(document.createTextNode('Copiar resumen'));cb.addEventListener('click',copySummary);a.appendChild(cb);
+  if(nxt){var vb=el('button','bd','Ver detalle');vb.type='button';vb.addEventListener('click',function(){openS(nxt)});a.appendChild(vb)}
+  t.appendChild(a);v.appendChild(t);
+
+  var car=el('div','car');
+  function st(ic,l,val,s,red){var c=el('div','st');var ll=el('div','l');ll.appendChild(icon(ic));ll.appendChild(el('span',null,l));c.appendChild(ll);c.appendChild(el('div','v'+(red?' red':''),val));c.appendChild(el('div','s',s));car.appendChild(c)}
+  var nAct=ITEMS.filter(function(i){return i.k!=='rel'&&i.act==='Acción requerida'&&(!i.eff||diff(i.eff)>=-7)}).length;
+  st('alert','Requieren acción',String(nAct),'cambios para revisar',nAct>0);
+  var R=region();var first=nextRel(R,90).filter(function(x){return !x.f})[0];
+  if(first){var dd=diff(first.iso);st('cal','Próxima liberación',dd<=0?'Hoy':dd===1?'Mañana':dd+' días',fd(first.iso)+' · '+ftm(first.at)+' Chile')}
+  var fr=FREEZES.filter(function(f){return f.to>=TODAY})[0];
+  if(fr){var ac=fr.from<=TODAY;st('snow',ac?'Congelado':'Congelamiento',ac?'Hasta '+fd(fr.to):diff(fr.from)+' días',frange(fr)+' · '+fr.why)}
+  var w=WEBINARS.filter(function(x){return Date.parse(x.at)>NOW})[0];
+  if(w){var wt=Date.parse(w.at);st('clock','Próximo webinar',fdt(wt),ftm(wt)+' · '+w.n)}
+  v.appendChild(car);
+
+  var s1=el('div','sec');s1.appendChild(secH('Urgente','Ver todo',function(){go('cambios','dep')}));var l1=el('div','list');
+  if(!U.length)l1.appendChild(el('p','empty','Nada vence en los próximos 30 días.'));U.forEach(function(i){l1.appendChild(item(i,true))});s1.appendChild(l1);v.appendChild(s1);
+  var s2=el('div','sec');s2.appendChild(secH('Este mes','Ver todo',function(){go('cambios','viene')}));var l2=el('div','list');
+  var MO=month();if(!MO.length)l2.appendChild(el('p','empty','Sin cambios destacados.'));MO.forEach(function(i){l2.appendChild(item(i,false))});s2.appendChild(l2);v.appendChild(s2);
+  return v;
+}
+
+/* ----- Estado ----- */
+function sEstado(){var v=el('section','screen');var h=el('div');h.appendChild(el('h1','title','Estado en vivo'));h.appendChild(el('p','sub','Genesys Cloud, AWS y Microsoft para use1 y sae1.'));v.appendChild(h);v.appendChild(estView());return v}
+
+/* ----- Cambios ----- */
+var SEGS=[{id:'dep',n:'Retiros',f:function(i){return i.k==='dep'}},{id:'viene',n:'Viene',f:function(i){return i.k==='ui'||i.k==='plat'}},{id:'rel',n:'Liberado',f:function(i){return i.k==='rel'}},{id:'api',n:'APIs',f:function(i){return i.k==='api'}}];
+function sCambios(){
+  var v=el('section','screen');var h=el('div');h.appendChild(el('h1','title','Cambios'));h.appendChild(el('p','sub','Todo lo anunciado por Genesys, por tipo.'));v.appendChild(h);
+  var seg=el('div','seg');SEGS.forEach(function(s){var b=el('button',null,s.n);b.type='button';b.appendChild(el('span','n',String(ITEMS.filter(s.f).length)));b.setAttribute('aria-pressed',String(M.seg===s.id));b.addEventListener('click',function(){M.seg=s.id;render()});seg.appendChild(b)});v.appendChild(seg);
+  var cur=SEGS.filter(function(s){return s.id===M.seg})[0]||SEGS[0];var list=ITEMS.filter(cur.f);
+  if(cur.id==='dep')list.sort(byDate);
+  else if(cur.id==='viene')list.sort(function(a,b){var x=(a.eff?0:1)-(b.eff?0:1);if(x)return x;var y=IMP[a.imp]-IMP[b.imp];return y||b.ann.localeCompare(a.ann)});
+  else if(cur.id==='rel')list.sort(function(a,b){return b.rel.localeCompare(a.rel)});
+  else list.sort(function(a,b){return (b.eff||b.ann).localeCompare(a.eff||a.ann)});
+  var l=el('div','list');if(!list.length)l.appendChild(el('p','empty','Sin cambios en esta categoría.'));list.forEach(function(i){l.appendChild(item(i,true))});v.appendChild(l);
+  return v;
+}
+
+/* ----- Agenda ----- */
+function sAgenda(){
+  var v=el('section','screen');var R=region();var h=el('div','hd');var ht=el('div','hd-t');ht.appendChild(el('h1','title','Agenda'));
+  ht.appendChild(el('p','sub',R.n+' recibe cambios los '+['domingo','lunes','martes','miércoles','jueves','viernes','sábado'][R.d]+' a la 01:00 hora local.'));h.appendChild(ht);h.appendChild(regionPicker());v.appendChild(h);
+  var ev=[];nextRel(R,75).forEach(function(r){if(!r.f)ev.push({k:r.iso,iso:r.iso,t:'Liberación '+R.id,x:ftm(r.at)+' hora de Chile',c:''})});
+  FREEZES.forEach(function(f){if(f.to>=TODAY)ev.push({k:f.from<TODAY?TODAY:f.from,iso:f.from<TODAY?TODAY:f.from,t:'Congelado · '+frange(f),x:f.why+' · sin liberaciones',c:'frz'})});
+  ITEMS.forEach(function(i){if(i.eff&&i.k!=='rel'){var d=diff(i.eff);if(d>=0&&d<=120&&(i.imp==='Alto'||i.imp==='Medio'||i.act==='Acción requerida'))ev.push({k:i.eff,iso:i.eff,t:i.t,x:KIND[i.k]+' · '+rel(d),c:'dep',it:i})}});
+  WEBINARS.forEach(function(w){var t=Date.parse(w.at);if(t>NOW){var iso=isoIn(t,TZ);ev.push({k:iso,iso:iso,t:w.n,x:'Webinar · '+ftm(t)+' · '+w.x,c:'web'})}});
+  ev.sort(function(a,b){return a.k.localeCompare(b.k)});
+  var tl=el('div','tl');ev.slice(0,14).forEach(function(e){
+    var r=el(e.it?'button':'div','ev');if(e.it){r.type='button';r.style.border='0';r.style.background='transparent';r.style.width='100%';r.style.textAlign='left';r.style.cursor='pointer';r.addEventListener('click',function(){openS(e.it)})}
+    var d=el('div','d',fd(e.iso));d.appendChild(el('span',null,new Intl.DateTimeFormat('es-CL',{timeZone:'UTC',weekday:'short'}).format(new Date(ms(e.iso))).replace('.','')));r.appendChild(d);
+    var rl=el('div','rail');rl.appendChild(el('span','dot '+e.c));r.appendChild(rl);
+    var x=el('div','e');x.appendChild(el('div','t',e.t));x.appendChild(el('div','x',e.x));r.appendChild(x);tl.appendChild(r)});
+  v.appendChild(tl);return v;
+}
+
+/* ----- Avisar ----- */
+function sAvisar(){
+  var v=el('section','screen');var h=el('div');h.appendChild(el('h1','title','Cómo avisar'));h.appendChild(el('p','sub','Tres momentos por cambio. En cada cambio, «Copiar aviso» arma el texto.'));v.appendChild(h);
+  [['MOMENTO 1','Cuando Genesys lo anuncia','Aviso «Lo que viene»: qué cambia, a quién afecta y si hay que preparar algo.'],['MOMENTO 2','Cuando se libera','Confirmación con capturas la semana en que aparece en las notas.'],['MOMENTO 3','Si es una deprecación','Recordatorios a 90, 30 y 7 días, con la acción concreta.']].forEach(function(s){
+    var c=el('div','card');c.appendChild(el('span','k',s[0]));c.appendChild(el('h3',null,s[1]));c.appendChild(el('p',null,s[2]));v.appendChild(c)});
+  var c=el('div','card');c.appendChild(el('h3',null,'Canal por público'));var dl=el('dl','kv');
+  [['Agentes','Mensaje corto vía supervisores, con captura'],['Supervisores','Correo o reunión semanal'],['Admins','Boletín y reunión de operación'],['TI','Correo directo con acción y fecha']].forEach(function(p){dl.appendChild(el('dt',null,p[0]));dl.appendChild(el('dd',null,p[1]))});
+  c.appendChild(dl);v.appendChild(c);
+  var lk=el('a','bw');lk.href='https://status.mypurecloud.com';lk.target='_blank';lk.rel='noopener';lk.innerHTML=svg('pulse');lk.appendChild(document.createTextNode('Estado del servicio de Genesys ↗'));lk.style.justifyContent='center';v.appendChild(lk);
+  return v;
+}
+
+function render(){
+  NOW=Date.now();TODAY=isoIn(NOW,TZ);
+  Array.prototype.forEach.call(tabs.children,function(b){if(b.dataset.t===M.tab)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
+  var v=M.tab==='estado'?sEstado():M.tab==='cambios'?sCambios():M.tab==='agenda'?sAgenda():M.tab==='avisar'?sAvisar():sHoy();
+  app.textContent='';if(M.tab!=='estado')app.appendChild(estBanner(function(){go('estado')}));app.appendChild(v);
+  var f=el('p','foot');f.appendChild(document.createTextNode('Revisado el '+fdl(REVISADO)+' · '));var a=el('button','mode-btn','Ver versión PC');a.type='button';a.addEventListener('click',function(){setMode('W')});f.appendChild(a);app.appendChild(f);
+}
+
+/* ----- Hoja, aviso y resumen ----- */
+var sheet=document.getElementById('sheet'),scrim=document.getElementById('mscrim'),cur=null,lastF=null;
+function when(i){if(i.eff){var d=diff(i.eff);return fdl(i.eff)+' ('+rel(d)+')'}if(i.rel)return 'Liberado el '+fdl(i.rel);return (i.ann?'Anunciado el '+fdl(i.ann)+'; ':'')+'aún sin fecha'}
+function openS(i){
+  cur=i;lastF=document.activeElement;var s=status(i);
+  var ch=document.getElementById('s-chip');ch.textContent='';ch.appendChild(el('span','chip '+s.c,s.lbl+' · '+KIND[i.k]));
+  document.getElementById('s-t').textContent=i.t;document.getElementById('s-en').textContent=i.en;
+  var kv=document.getElementById('s-kv');kv.textContent='';
+  [['Qué cambia',i.s],['Cuándo',when(i)],['A quién',audTxt(i)],['Impacto',i.imp||'Sin dato'],['Qué hacer',i.do||(i.act==='Acción requerida'?'Revisar si aplica y actuar antes de la fecha.':'Revisar con tiempo si afecta a la operación.')]].forEach(function(p){kv.appendChild(el('dt',null,p[0]));kv.appendChild(el('dd',null,p[1]))});
+  document.getElementById('s-link').href=i.url;sheet.hidden=false;scrim.hidden=false;document.getElementById('s-copy').focus();
+}
+function closeS(){sheet.hidden=true;scrim.hidden=true;if(lastF&&lastF.focus)lastF.focus()}
+document.getElementById('s-close').addEventListener('click',closeS);scrim.addEventListener('click',closeS);
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!sheet.hidden)closeS()});
+var tt=null;function toast(m){var t=document.getElementById('mtoast');t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(function(){t.hidden=true},2400)}
+function copy(txt,ok){
+  function fb(){var c=document.getElementById('mclip');c.value=txt;c.select();var done=false;try{done=document.execCommand('copy')}catch(e){}toast(done?ok:'No se pudo copiar automáticamente')}
+  try{navigator.clipboard.writeText(txt).then(function(){toast(ok)},fb)}catch(e){fb()}
+}
+document.getElementById('s-copy').addEventListener('click',function(){var i=cur;
+  copy(['Aviso Genesys Cloud: '+i.t,'','Qué cambia: '+i.s,'A quién afecta: '+audTxt(i),'Cuándo: '+when(i),'Qué hacer: '+(i.do||'Revisar si aplica.'),'Más info: '+i.url,'','Diego Martínez Sánchez','Ingeniero de Continuidad Operacional · e-contact'].join('\n'),'Aviso copiado')});
+function copySummary(){
+  var R=region();var L=['Continuidad Genesys Cloud · '+fdl(TODAY),''];
+  var U=urgent();L.push('Urgente:');if(!U.length)L.push('- Nada vence en los próximos 30 días');U.forEach(function(i){L.push('- '+i.t+': '+fd(i.eff)+' ('+rel(diff(i.eff))+')')});
+  L.push('','Este mes:');month().forEach(function(i){L.push('- '+i.t+(i.k==='rel'?' (liberado '+fd(i.rel)+')':' (anunciado, sin fecha)'))});
+  var first=nextRel(R,90).filter(function(x){return !x.f})[0];if(first)L.push('','Próxima liberación '+R.id+': '+fdl(first.iso)+', '+ftm(first.at)+' hora de Chile');
+  L.push('','Diego Martínez Sánchez · Continuidad Operacional · e-contact');copy(L.join('\n'),'Resumen copiado');
+}
+estSubscribe(render);
+render();
+setInterval(function(){if(isoIn(Date.now(),TZ)!==TODAY)render()},60000);
+return {go:go,view:function(){return M.tab}};
+})();
+
+/* Si hay una caída o degradación que nos afecta, abrir Estado al cargar */
+var autoDone=false;estSubscribe(function(){if(autoDone||!EST)return;autoDone=true;var l=estLevel();
+  if((l==='caida'||l==='degradado')&&!location.hash){WEBV.go('estado');MOBV.go('estado')}});
 })();
 </script>
-</body>
-</html>
+
+</body></html>
