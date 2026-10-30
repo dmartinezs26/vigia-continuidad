@@ -1,5 +1,5 @@
 {
- "revisado": "2026-10-30T06:15:14Z",
+ "revisado": "2026-10-30T06:20:15Z",
  "intervalo": "cada 5 minutos",
  "nivel": "ok",
  "titular": "Todo operativo en use1 y sae1",
@@ -88,10 +88,6 @@
   }
  ],
  "historial": [
-  {
-   "at": "2026-10-29T06:20:13Z",
-   "nivel": "ok"
-  },
   {
    "at": "2026-10-29T06:25:12Z",
    "nivel": "ok"
@@ -1238,6 +1234,10 @@
   },
   {
    "at": "2026-10-30T06:15:14Z",
+   "nivel": "ok"
+  },
+  {
+   "at": "2026-10-30T06:20:15Z",
    "nivel": "ok"
   }
  ],
