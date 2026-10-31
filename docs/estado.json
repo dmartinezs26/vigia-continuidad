@@ -1,5 +1,5 @@
 {
- "revisado": "2026-10-31T01:25:13Z",
+ "revisado": "2026-10-31T01:30:15Z",
  "intervalo": "cada 5 minutos",
  "nivel": "ok",
  "titular": "Todo operativo en use1 y sae1",
@@ -76,22 +76,9 @@
    "act": "2026-09-18T19:39:39Z",
    "url": "https://stspg.io/hwpqn7p5rhnz",
    "region": "EMEA (UAE)"
-  },
-  {
-   "t": "Service impact: Increased invoke error rates (apigateway us-west-2)",
-   "fuente": "AWS",
-   "estado": "Abierto, sin mensaje de resolución",
-   "desde": null,
-   "act": "2026-10-30T01:28:38Z",
-   "url": "https://status.aws.amazon.com/",
-   "region": "us-west-2"
   }
  ],
  "historial": [
-  {
-   "at": "2026-10-30T01:10:12Z",
-   "nivel": "ok"
-  },
   {
    "at": "2026-10-30T01:15:14Z",
    "nivel": "ok"
@@ -1238,6 +1225,10 @@
   },
   {
    "at": "2026-10-31T01:25:13Z",
+   "nivel": "ok"
+  },
+  {
+   "at": "2026-10-31T01:30:15Z",
    "nivel": "ok"
   }
  ],
